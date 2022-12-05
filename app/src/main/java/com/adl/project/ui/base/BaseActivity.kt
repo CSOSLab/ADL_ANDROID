@@ -9,6 +9,11 @@ import androidx.viewbinding.ViewBinding
 import com.adl.project.R
 import com.adl.project.common.enum.TransitionMode
 
+/**
+ * ADL_MONITORING_APP by CSOS PROJECT
+ * DEVELOPER : 한병하 (Glacier Han)
+ * TODO :: ViewBinding Boiler Plate Code를 줄이기 위한 BASE ACTIVITY 도입
+ */
 
 abstract class BaseActivity<B : ViewBinding>(private val inflate: (LayoutInflater) -> B, private val transitionMode : TransitionMode = TransitionMode.NONE) : AppCompatActivity() {
     protected lateinit var binding: B
@@ -51,7 +56,6 @@ abstract class BaseActivity<B : ViewBinding>(private val inflate: (LayoutInflate
     }
 
     private fun setInitActivityTransition() {
-        // 애니메이션 base activity 인자 값에 따라 자동 설정
         when (transitionMode) {
             TransitionMode.HORIZON -> overridePendingTransition(R.anim.horizon_enter, R.anim.horizon_exit)
             TransitionMode.VERTICAL -> overridePendingTransition(R.anim.vertical_enter, R.anim.none)

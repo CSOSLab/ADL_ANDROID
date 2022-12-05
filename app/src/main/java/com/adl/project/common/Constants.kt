@@ -1,9 +1,11 @@
 package com.adl.project.common
 
 /**
- * 상수 정의
- * developer : 한병하 (Glacier Han)
+ * ADL_MONITORING_APP by CSOS PROJECT
+ * DEVELOPER : 한병하 (Glacier Han)
+ * TODO :: 상수 정의 클래스
  */
+
 class Constants {
     companion object {
         // 파베 디비 키 값들

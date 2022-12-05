@@ -17,6 +17,11 @@ import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.utils.ColorTemplate
 
+/**
+ * ADL_MONITORING_APP by CSOS PROJECT
+ * DEVELOPER : 한병하 (Glacier Han)
+ * TODO :: 분석 결과 메뉴화면
+ */
 
 class AnalyticActivity :
     BaseActivity<ActivityAnalyticBinding>(ActivityAnalyticBinding::inflate, TransitionMode.FADE),
@@ -35,6 +40,11 @@ class AnalyticActivity :
 //        binding.tvTest.setText(name + " > " + mode)
         setChart1()
         setChart2()
+
+        binding.btn1.setOnClickListener(this@AnalyticActivity)
+        binding.btn2.setOnClickListener(this@AnalyticActivity)
+        binding.btn3.setOnClickListener(this@AnalyticActivity)
+        binding.btn4.setOnClickListener(this@AnalyticActivity)
 
     }
 
@@ -110,13 +120,13 @@ class AnalyticActivity :
     }
 
     override fun onClick(view: View?) {
-//        when (view?.id) {
-//            R.id.btn_1 -> {
-//                val intent = Intent(applicationContext, AnalyticActivity::class.java)
+        when (view?.id) {
+            R.id.btn_1 -> {
+                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
 //                intent.putExtra("name", "냉장고")
-//                intent.putExtra("mode", 1)
-//                startActivity(intent)
-//            }
-//        }
+                intent.putExtra("mode", 1)
+                startActivity(intent)
+            }
+        }
     }
 }

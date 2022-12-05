@@ -27,6 +27,12 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 
+/**
+ * ADL_MONITORING_APP by CSOS PROJECT
+ * DEVELOPER : 한병하 (Glacier Han)
+ * TODO :: 메인 실시간 그래프 화면
+ */
+
 class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate, TransitionMode.FADE), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

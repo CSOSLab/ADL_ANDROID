@@ -8,6 +8,12 @@ import com.adl.project.databinding.ActivityLoginBinding
 import com.adl.project.databinding.ActivityMainBinding
 import com.adl.project.ui.base.BaseActivity
 
+/**
+ * ADL_MONITORING_APP by CSOS PROJECT
+ * DEVELOPER : 한병하 (Glacier Han)
+ * TODO :: 로그인 화면
+ */
+
 class LoginActivity : BaseActivity<ActivityLoginBinding>(ActivityLoginBinding::inflate, TransitionMode.FADE) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
