@@ -3,6 +3,7 @@ package com.adl.project.ui.activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -15,23 +16,43 @@ import com.adl.project.ui.base.BaseActivity
 import com.google.android.material.tabs.TabLayout
 import com.magical.near.ui.fragment.AnalyticOneDetailFragment
 
-class AnalyticOneDetailActivity : BaseActivity<ActivityAnalyticOneDetailBinding>(ActivityAnalyticOneDetailBinding::inflate, TransitionMode.FADE) {
+class AnalyticOneDetailActivity : BaseActivity<ActivityAnalyticOneDetailBinding>(
+    ActivityAnalyticOneDetailBinding::inflate,
+    TransitionMode.FADE
+) {
 
     val mViewPager by lazy {
         binding.pager
     }
 
+    var mode = ""
+    var name = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        getIntents()
         setInitialize()
     }
 
-    fun setInitialize(){
+    fun setInitialize() {
         setViewPager()
+        binding.tvTitle.setText(name)
+
     }
 
-    fun setViewPager(){
-        mViewPager.adapter = PagerAdapter(supportFragmentManager)
+    fun getIntents() {
+        intent.apply {
+            if (extras != null) {
+                mode = getStringExtra("mode").toString()
+                name = getStringExtra("name").toString()
+            } else {
+                finish()
+            }
+        }
+    }
+
+    fun setViewPager() {
+        mViewPager.adapter = PagerAdapter(supportFragmentManager, name, mode)
         mViewPager.currentItem = 0
 
         val tabLayout = findViewById<View>(R.id.tabs) as TabLayout
@@ -56,16 +77,61 @@ class AnalyticOneDetailActivity : BaseActivity<ActivityAnalyticOneDetailBinding>
         })
     }
 
-    inner class PagerAdapter(supportFragmentManager: FragmentManager) : FragmentStatePagerAdapter(supportFragmentManager) {
+    inner class PagerAdapter(supportFragmentManager: FragmentManager, name_:String, mode_:String) :
+        FragmentStatePagerAdapter(supportFragmentManager) {
+        val name_ = name_
+        val mode_ = mode_
 
         override fun getItem(position: Int): Fragment {
 
             return when (position) {
-                0 -> AnalyticOneDetailFragment()
-                1 -> AnalyticOneDetailFragment()
-                2 -> AnalyticOneDetailFragment()
-                3 -> AnalyticOneDetailFragment()
-                else -> AnalyticOneDetailFragment()
+                // TODO 참고 :: https://medium.com/hongbeomi-dev/fragment-잘-써보기-bundle-c2fd8fe96967
+                0 -> {
+                    Log.d("name", name + mode)
+                    AnalyticOneDetailFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("KEY", "년도별 차트 보기")
+                            putString("name", name_)
+                            putString("mode", mode_)
+                        }
+                    }
+                }
+                1 -> {
+                    AnalyticOneDetailFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("KEY", "월별 차트 보기")
+                            putString("name", name_)
+                            putString("mode", mode_)
+                        }
+                    }
+                }
+                2 -> {
+                    AnalyticOneDetailFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("KEY", "주별 차트 보기")
+                            putString("name", name_)
+                            putString("mode", mode_)
+                        }
+                    }
+                }
+                3 -> {
+                    AnalyticOneDetailFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("KEY", "일별 차트 보기")
+                            putString("name", name_)
+                            putString("mode", mode_)
+                        }
+                    }
+                }
+                else -> {
+                    AnalyticOneDetailFragment().apply {
+                        arguments = Bundle().apply {
+                            putString("KEY", "일별 차트 보기")
+                            putString("name", name_)
+                            putString("mode", mode_)
+                        }
+                    }
+                }
             }
         }
 

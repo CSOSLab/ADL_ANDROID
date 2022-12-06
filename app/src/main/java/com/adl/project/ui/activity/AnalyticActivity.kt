@@ -113,9 +113,13 @@ class AnalyticActivity :
     }
 
     fun getIntents() {
-        if (intent.extras != null) {
-            mode = intent.getIntExtra("mode", 1)
-            name = intent.getStringExtra("name").toString()
+        intent.apply {
+            if (extras != null) {
+                mode = intent.getIntExtra("mode", 1)
+                name = intent.getStringExtra("name").toString()
+            } else {
+                finish()
+            }
         }
     }
 
@@ -123,8 +127,36 @@ class AnalyticActivity :
         when (view?.id) {
             R.id.btn_1 -> {
                 val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
-//                intent.putExtra("name", "냉장고")
+                intent.putExtra("name", "생활능력")
                 intent.putExtra("mode", 1)
+                startActivity(intent)
+            }
+
+            R.id.btn_2 -> {
+                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                intent.putExtra("name", "운동능력")
+                intent.putExtra("mode", 2)
+                startActivity(intent)
+            }
+
+            R.id.btn_3 -> {
+                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                intent.putExtra("name", "정규성")
+                intent.putExtra("mode", 3)
+                startActivity(intent)
+            }
+
+            R.id.btn_4 -> {
+                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                intent.putExtra("name", "다양성")
+                intent.putExtra("mode", 4)
+                startActivity(intent)
+            }
+
+            R.id.btn_5 -> {
+                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                intent.putExtra("name", "정확성")
+                intent.putExtra("mode", 5)
                 startActivity(intent)
             }
         }
