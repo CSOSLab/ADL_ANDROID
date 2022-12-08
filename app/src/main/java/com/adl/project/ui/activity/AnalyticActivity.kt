@@ -2,13 +2,11 @@ package com.adl.project.ui.activity
 
 import android.content.Intent
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import com.adl.project.R
 import com.adl.project.common.enum.TransitionMode
 import com.adl.project.databinding.ActivityAnalyticBinding
-import com.adl.project.databinding.ActivityLoginBinding
 import com.adl.project.ui.base.BaseActivity
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.components.Legend
@@ -45,6 +43,7 @@ class AnalyticActivity :
         binding.btn2.setOnClickListener(this@AnalyticActivity)
         binding.btn3.setOnClickListener(this@AnalyticActivity)
         binding.btn4.setOnClickListener(this@AnalyticActivity)
+        binding.btn5.setOnClickListener(this@AnalyticActivity)
 
     }
 
@@ -126,35 +125,35 @@ class AnalyticActivity :
     override fun onClick(view: View?) {
         when (view?.id) {
             R.id.btn_1 -> {
-                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                val intent = Intent(applicationContext, AnalyticDetailActivity::class.java)
                 intent.putExtra("name", "생활능력")
                 intent.putExtra("mode", 1)
                 startActivity(intent)
             }
 
             R.id.btn_2 -> {
-                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                val intent = Intent(applicationContext, AnalyticDetailActivity::class.java)
                 intent.putExtra("name", "운동능력")
                 intent.putExtra("mode", 2)
                 startActivity(intent)
             }
 
             R.id.btn_3 -> {
-                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                val intent = Intent(applicationContext, AnalyticDetailActivity::class.java)
                 intent.putExtra("name", "정규성")
                 intent.putExtra("mode", 3)
                 startActivity(intent)
             }
 
             R.id.btn_4 -> {
-                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                val intent = Intent(applicationContext, AnalyticDetailActivity::class.java)
                 intent.putExtra("name", "다양성")
                 intent.putExtra("mode", 4)
                 startActivity(intent)
             }
 
             R.id.btn_5 -> {
-                val intent = Intent(applicationContext, AnalyticOneDetailActivity::class.java)
+                val intent = Intent(applicationContext, AnalyticDetailActivity::class.java)
                 intent.putExtra("name", "정확성")
                 intent.putExtra("mode", 5)
                 startActivity(intent)

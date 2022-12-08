@@ -1,7 +1,5 @@
 package com.adl.project.ui.activity
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -10,14 +8,13 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import com.adl.project.R
 import com.adl.project.common.enum.TransitionMode
-import com.adl.project.databinding.ActivityAnalyticOneDetailBinding
-import com.adl.project.databinding.ActivityLoginBinding
+import com.adl.project.databinding.ActivityAnalyticDetailBinding
 import com.adl.project.ui.base.BaseActivity
 import com.google.android.material.tabs.TabLayout
 import com.magical.near.ui.fragment.AnalyticOneDetailFragment
 
-class AnalyticOneDetailActivity : BaseActivity<ActivityAnalyticOneDetailBinding>(
-    ActivityAnalyticOneDetailBinding::inflate,
+class AnalyticDetailActivity : BaseActivity<ActivityAnalyticDetailBinding>(
+    ActivityAnalyticDetailBinding::inflate,
     TransitionMode.FADE
 ) {
 

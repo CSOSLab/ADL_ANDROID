@@ -45,6 +45,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
         //TODO -- mpchart, 범례 여러개 사용해서, 각 범례마다 y값 지정 (ex 0,10,20,30,40) 그리고 dot&line graph에서 line 제거해서 표현
         setData(binding.mainChart)
         binding.btnAnal.setOnClickListener(this@MainActivity)
+        binding.btnSetting.setOnClickListener(this@MainActivity)
+
     }
 
     private fun setData(chart : ScatterChart) {
@@ -146,6 +148,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
                 val intent = Intent(applicationContext, AnalyticActivity::class.java)
                 intent.putExtra("name", "냉장고")
                 intent.putExtra("mode", 1)
+                startActivity(intent)
+            }
+            R.id.btn_setting -> {
+                val intent = Intent(applicationContext, SettingActivity::class.java)
                 startActivity(intent)
             }
         }
