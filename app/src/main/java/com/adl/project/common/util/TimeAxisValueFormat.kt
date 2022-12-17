@@ -1,13 +1,16 @@
-package com.adl.project.ui.activity
+package com.adl.project.common.util
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 class TimeAxisValueFormat : IndexAxisValueFormatter() {
+
+    //https://junyoung-developer.tistory.com/174
 
     override fun getFormattedValue(value: Float): String {
 

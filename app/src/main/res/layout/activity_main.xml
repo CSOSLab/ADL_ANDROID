@@ -205,7 +205,7 @@
             android:layout_height="wrap_content"
             app:efab_icon="@drawable/ic_baseline_dehaze_24"
             android:layout_margin="15dp"
-            app:efab_color="@color/grey"
+            app:efab_color="#81B5B5B5"
             android:layout_gravity="bottom|end"
             app:efab_orientation="landscape"/>
         <com.nambimobile.widgets.efab.FabOption

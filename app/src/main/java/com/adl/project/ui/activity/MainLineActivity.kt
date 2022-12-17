@@ -2,23 +2,20 @@ package com.adl.project.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContextCompat
 import com.adl.project.R
 import com.adl.project.common.enum.TransitionMode
+import com.adl.project.common.util.TimeAxisValueFormat
 import com.adl.project.databinding.ActivityMainLineBinding
 import com.adl.project.ui.base.BaseActivity
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.charts.ScatterChart
-import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
-import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet
-import java.util.concurrent.TimeUnit
+import java.text.SimpleDateFormat
 
 /**
  * ADL_MONITORING_APP by CSOS PROJECT
@@ -27,7 +24,7 @@ import java.util.concurrent.TimeUnit
  */
 
 
-//https://junyoung-developer.tistory.com/174
+
 
 class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineBinding::inflate, TransitionMode.FADE), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,12 +42,46 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
 
     }
 
+    private fun convertTimeToMin(value: String) : Float{
+        // HH:mm:ss
+        var timeMin = 0.0
+        try{
+            timeMin += value.split(":")[1].toInt() //분
+            timeMin += value.split(":")[0].toInt() * 60 //시
+            timeMin += value.split(":")[2].toInt() / 60.0
+
+        }catch (e: Exception){
+            e.printStackTrace()
+        }
+
+        // 오전 9시가 0이 되어야하는 상황
+        timeMin -= 540f
+        // 오전 7시 처리
+        if(timeMin < 0){
+            timeMin = 1440f + timeMin
+        }
+        Log.d("time", timeMin.toString())
+
+        return timeMin.toFloat()// 오전9시 기준이기 때문에 540빼줌
+    }
+
     private fun setData(chart: LineChart) {
         val entries_0_on = ArrayList<Entry>()
-        entries_0_on.add(Entry(-240f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(-239f,0.0f,AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-        entries_0_on.add(Entry(5f,0.0f,AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(5.5f,0.0f,AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+        entries_0_on.add(Entry(convertTimeToMin("10:44:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        entries_0_on.add(Entry(convertTimeToMin("12:14:13"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+        entries_0_on.add(Entry(convertTimeToMin("13:24:53"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        entries_0_on.add(Entry(convertTimeToMin("14:34:00"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        entries_0_on.add(Entry(convertTimeToMin("15:44:00"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        entries_0_on.add(Entry(convertTimeToMin("16:40:43"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+        entries_0_on.add(Entry(convertTimeToMin("07:40:43"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+        entries_0_on.add(Entry(convertTimeToMin("19:05:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        entries_0_on.add(Entry(convertTimeToMin("04:05:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        entries_0_on.add(Entry(convertTimeToMin("05:05:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+
+//        entries_0_on.add(Entry(104.3888f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+//        entries_0_on.add(Entry(5.3833333f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+//        entries_0_on.add(Entry(460.3833333f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+//        entries_0_on.add(Entry(1430.3833333f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
 
 
         val entries2 = ArrayList<Entry>()
@@ -88,7 +119,7 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
             }
             xAxis.run {
                 position = XAxis.XAxisPosition.BOTTOM //X축을 아래에다가 둔다.
-                granularity = 1f // 1 단위만큼 간격 두기
+                granularity = 0.1f // 1 단위만큼 간격 두기
                 setDrawAxisLine(true) // 축 그림
                 setDrawGridLines(false) // 격자
 //                textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) //라벨 색상
@@ -96,8 +127,8 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
 
                 xAxis.valueFormatter = TimeAxisValueFormat()
                 xAxis.setDrawLabels(true)  // Label 표시 여부
-                xAxis.axisMinimum = -240f  // 오전 5시
-                xAxis.axisMaximum = 1200f
+                xAxis.axisMinimum = 0f  // -240f : 오전 5시, 0f : 오전 9시
+                xAxis.axisMaximum = 1440f
             }
             axisRight.isEnabled = false // 오른쪽 Y축을 안보이게 해줌.
             setTouchEnabled(true) // 그래프 터치해도 아무 변화없게 막음
@@ -116,6 +147,7 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
         var set2 = LineDataSet(entries2,"전자렌지") // 데이터셋 초기화
         var set3 = LineDataSet(entries3,"변기") // 데이터셋 초기화
         var set4 = LineDataSet(entries4,"냉장고") // 데이터셋 초기화
+        Log.d("DATA","setted")
 
         set.lineWidth = 0f
         set.setDrawValues(false)
