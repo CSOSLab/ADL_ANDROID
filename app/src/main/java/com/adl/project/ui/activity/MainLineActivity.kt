@@ -1,21 +1,26 @@
 package com.adl.project.ui.activity
 
+import com.adl.project.model.adl.MainResponseModel
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import com.adl.project.R
 import com.adl.project.common.enum.TransitionMode
 import com.adl.project.common.util.TimeAxisValueFormat
 import com.adl.project.databinding.ActivityMainLineBinding
+import com.adl.project.service.HttpService
 import com.adl.project.ui.base.BaseActivity
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import java.text.SimpleDateFormat
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 /**
  * ADL_MONITORING_APP by CSOS PROJECT
@@ -24,14 +29,15 @@ import java.text.SimpleDateFormat
  */
 
 
-
-
-class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineBinding::inflate, TransitionMode.FADE), View.OnClickListener {
+class MainLineActivity :
+    BaseActivity<ActivityMainLineBinding>(ActivityMainLineBinding::inflate, TransitionMode.FADE),
+    View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        connectToServer()
         setInitialize()
     }
-
 
     private fun setInitialize() {
 
@@ -42,22 +48,56 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
 
     }
 
-    private fun convertTimeToMin(value: String) : Float{
+    private fun connectToServer() {
+        val URL = "http://155.230.186.66:8000/ADLs/"
+        val SLIMHUB = "AB001309"
+
+        val server = HttpService.create(URL)
+        server.getMainData("2022-12-17", "2022-12-18")
+            .enqueue(object : Callback<MainResponseModel> {
+                override fun onResponse(
+                    call: Call<MainResponseModel>,
+                    response: Response<MainResponseModel>
+                ) {
+                    Log.d("RETROFIT", response.raw().toString())
+
+                    if (response.isSuccessful()) { // <--> response.code == 200
+                        // 성공 처리
+                        Toast.makeText(
+                            applicationContext,
+                            response.body().toString(),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d("RETROFIT", response.body().toString())
+                    } else { // code == 400
+                        // 실패 처리
+                    }
+                }
+
+                override fun onFailure(call: Call<MainResponseModel>, t: Throwable) {
+                    Log.d("RETROFIT", t.toString())
+                }
+            })
+
+
+    }
+
+    private fun convertTimeToMin(value: String): Float {
         // HH:mm:ss
         var timeMin = 0.0
-        try{
+        try {
             timeMin += value.split(":")[1].toInt() //분
             timeMin += value.split(":")[0].toInt() * 60 //시
             timeMin += value.split(":")[2].toInt() / 60.0
 
-        }catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
 
         // 오전 9시가 0이 되어야하는 상황
         timeMin -= 540f
         // 오전 7시 처리
-        if(timeMin < 0){
+        if (timeMin < 0) {
             timeMin = 1440f + timeMin
         }
         Log.d("time", timeMin.toString())
@@ -67,16 +107,106 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
 
     private fun setData(chart: LineChart) {
         val entries_0_on = ArrayList<Entry>()
-        entries_0_on.add(Entry(convertTimeToMin("10:44:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(convertTimeToMin("12:14:13"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-        entries_0_on.add(Entry(convertTimeToMin("13:24:53"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(convertTimeToMin("14:34:00"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(convertTimeToMin("15:44:00"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(convertTimeToMin("16:40:43"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-        entries_0_on.add(Entry(convertTimeToMin("07:40:43"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-        entries_0_on.add(Entry(convertTimeToMin("19:05:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(convertTimeToMin("04:05:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-        entries_0_on.add(Entry(convertTimeToMin("05:05:23"),0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("10:44:23"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_up_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("12:14:13"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_down_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("13:24:53"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_up_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("14:34:00"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_up_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("15:44:00"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_up_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("16:40:43"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_down_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("07:40:43"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_down_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("19:05:23"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_up_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("04:05:23"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_up_24
+                )
+            )
+        )
+        entries_0_on.add(
+            Entry(
+                convertTimeToMin("05:05:23"),
+                0.0f,
+                AppCompatResources.getDrawable(
+                    applicationContext,
+                    R.drawable.ic_baseline_arrow_drop_up_24
+                )
+            )
+        )
 
 //        entries_0_on.add(Entry(104.3888f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
 //        entries_0_on.add(Entry(5.3833333f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
@@ -85,19 +215,19 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
 
 
         val entries2 = ArrayList<Entry>()
-        entries2.add(Entry(1.4f,10.0f))
-        entries2.add(Entry(3.4f,10.0f))
-        entries2.add(Entry(3.6f,10.0f))
-        entries2.add(Entry(4.2f,10.0f))
+        entries2.add(Entry(1.4f, 10.0f))
+        entries2.add(Entry(3.4f, 10.0f))
+        entries2.add(Entry(3.6f, 10.0f))
+        entries2.add(Entry(4.2f, 10.0f))
 
         val entries3 = ArrayList<Entry>()
-        entries3.add(Entry(1.4f,20.0f))
-        entries3.add(Entry(3.4f,20.0f))
-        entries3.add(Entry(3.6f,20.0f))
+        entries3.add(Entry(1.4f, 20.0f))
+        entries3.add(Entry(3.4f, 20.0f))
+        entries3.add(Entry(3.6f, 20.0f))
 
         val entries4 = ArrayList<Entry>()
-        entries4.add(Entry(1.4f,30.0f))
-        entries4.add(Entry(3.4f,30.0f))
+        entries4.add(Entry(1.4f, 30.0f))
+        entries4.add(Entry(3.4f, 30.0f))
 
 
         chart.run {
@@ -143,11 +273,11 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
             legend.setDrawInside(false)
         }
 
-        var set = LineDataSet(entries_0_on,"환경 경보") // 데이터셋 초기화
-        var set2 = LineDataSet(entries2,"전자렌지") // 데이터셋 초기화
-        var set3 = LineDataSet(entries3,"변기") // 데이터셋 초기화
-        var set4 = LineDataSet(entries4,"냉장고") // 데이터셋 초기화
-        Log.d("DATA","setted")
+        var set = LineDataSet(entries_0_on, "환경 경보") // 데이터셋 초기화
+        var set2 = LineDataSet(entries2, "전자렌지") // 데이터셋 초기화
+        var set3 = LineDataSet(entries3, "변기") // 데이터셋 초기화
+        var set4 = LineDataSet(entries4, "냉장고") // 데이터셋 초기화
+        Log.d("DATA", "setted")
 
         set.lineWidth = 0f
         set.setDrawValues(false)
@@ -163,7 +293,7 @@ class MainLineActivity : BaseActivity<ActivityMainLineBinding>(ActivityMainLineB
 //        set3.color = ContextCompat.getColor(applicationContext!!,R.color.purple_200) // 바 그래프 색 설정
 //        set4.color = ContextCompat.getColor(applicationContext!!,R.color.teal_200) // 바 그래프 색 설정
 
-        val dataSet :ArrayList<ILineDataSet> = ArrayList()
+        val dataSet: ArrayList<ILineDataSet> = ArrayList()
         dataSet.add(set)
         dataSet.add(set2)
         dataSet.add(set3)

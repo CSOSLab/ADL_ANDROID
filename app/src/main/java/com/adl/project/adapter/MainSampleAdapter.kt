@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.adl.project.common.listener.AdapterClickListener
 import com.adl.project.databinding.ListItemSampleMainBinding
-import com.adl.project.model.SampleBoardInfo
+import com.adl.project.model.test.SampleBoardInfo
 import com.adl.project.ui.viewholder.MainSampleViewHolder
 
 

@@ -1,4 +1,4 @@
-
+package com.adl.project.model.test
 /*
 
 data = {

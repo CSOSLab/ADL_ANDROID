@@ -169,6 +169,16 @@
             app:label_text="결과 분석"/>
 
         <com.nambimobile.widgets.efab.FabOption
+            android:id="@+id/btn_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_orientation="landscape"
+            android:layout_margin="15dp"
+            android:src="@drawable/ic_baseline_date_range_24"
+            app:fab_color="#D68533"
+            app:label_text="이력"/>
+
+        <com.nambimobile.widgets.efab.FabOption
             android:id="@+id/btn_setting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
