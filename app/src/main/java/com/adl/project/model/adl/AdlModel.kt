@@ -1,10 +1,9 @@
 package com.adl.project.model.adl
 
 import com.google.gson.annotations.SerializedName
+import java.sql.Timestamp
+import java.util.*
 
 data class AdlModel(
-    @SerializedName("location") var location: String? = null,
-    @SerializedName("time") var time: String? = null,
-    @SerializedName("type") var type: String? = null,
-    @SerializedName("value") var value: String? = null
+    val location: String, val time: Timestamp, val type: String, val value: String
 )

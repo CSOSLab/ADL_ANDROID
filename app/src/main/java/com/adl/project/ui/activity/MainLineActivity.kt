@@ -1,16 +1,20 @@
 package com.adl.project.ui.activity
 
-import com.adl.project.model.adl.MainResponseModel
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import com.adl.project.R
+import com.adl.project.common.*
 import com.adl.project.common.enum.TransitionMode
 import com.adl.project.common.util.TimeAxisValueFormat
 import com.adl.project.databinding.ActivityMainLineBinding
+import com.adl.project.model.adl.AdlListModel
+import com.adl.project.model.adl.DeviceListModel
 import com.adl.project.service.HttpService
 import com.adl.project.ui.base.BaseActivity
 import com.github.mikephil.charting.charts.LineChart
@@ -18,9 +22,13 @@ import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.google.gson.Gson
+import kotlinx.coroutines.*
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
+
 
 /**
  * ADL_MONITORING_APP by CSOS PROJECT
@@ -28,58 +36,205 @@ import retrofit2.Response
  * TODO :: 메인 실시간 그래프 화면
  */
 
-
 class MainLineActivity :
     BaseActivity<ActivityMainLineBinding>(ActivityMainLineBinding::inflate, TransitionMode.FADE),
     View.OnClickListener {
+
+    var adlList : AdlListModel? = null
+    var deviceList : DeviceListModel? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        connectToServer()
+        CoroutineScope(Dispatchers.Main).launch {
+            connectToServer()
+        }
         setInitialize()
     }
 
     private fun setInitialize() {
-
         //TODO -- mpchart, 범례 여러개 사용해서, 각 범례마다 y값 지정 (ex 0,10,20,30,40) 그리고 dot&line graph에서 line 제거해서 표현
-        setData(binding.mainChart)
+//        setData(binding.mainChart)
         binding.btnAnal.setOnClickListener(this@MainLineActivity)
         binding.btnSetting.setOnClickListener(this@MainLineActivity)
+    }
+
+    /* TODO :: 서버 연결 ->
+     *  1. 디바이스 정보 받아와서 축 요소 세팅
+     *  2. ADL 정보 받아와서 차트 그리기 */
+
+    private suspend fun getDevice(){
+        val URL1 = "http://155.230.186.66:8000/devices/"
+        val SLIMHUB = "AB001309"
+        val server1 = HttpService.create(URL1 + SLIMHUB + "/")
+        val data = server1.getDeviceData()
+        Log.d("DBG:RETRO", data)
+        deviceList = Gson().fromJson(data, DeviceListModel::class.java)
+    }
+
+    private suspend fun getAdl(){
+        val URL2 = "http://155.230.186.66:8000/ADLs/"
+        val SLIMHUB = "AB001309"
+        val server2 = HttpService.create(URL2 + SLIMHUB + "/")
+        val data = server2.getMainData("2022-12-17", "2022-12-18")
+        Log.d("DBG::RETRO", data)
+        adlList = Gson().fromJson(data, AdlListModel::class.java)
+    }
+
+    suspend fun connectToServer() {
+        // TODO :: 코루틴 도입 -> getDevice, getAdl 을 UI쓰레드에서 분리시키고, 서버연동 과정이 끝나면 차트 그리기. 서버와 연결이 불가능하면 안내문구 띄운 후 앱 종료.
+        val job = CoroutineScope(Dispatchers.IO).launch {
+            try {
+                getDevice()
+                getAdl()
+            } catch (e:Exception){
+                val handler = Handler(Looper.getMainLooper())
+                handler.postDelayed(java.lang.Runnable { Toast.makeText(applicationContext,"서버와 연결이 불안정해 앱을 종료합니다.", Toast.LENGTH_LONG).show() }, 0)
+                finish()
+            }
+        }
+
+        runBlocking {
+            job.join()
+            // job이 끝나면, 밑에 코드 실행
+
+            // TODO :: 축 설정
+            setAxisWithData()
+        }
 
     }
 
-    private fun connectToServer() {
-        val URL = "http://155.230.186.66:8000/ADLs/"
-        val SLIMHUB = "AB001309"
+    private fun setAxisWithData(){
+        Log.d("DBG:RETRO", deviceList.toString())
+        Log.d("DBG:RETRO", adlList.toString())
 
-        val server = HttpService.create(URL)
-        server.getMainData("2022-12-17", "2022-12-18")
-            .enqueue(object : Callback<MainResponseModel> {
-                override fun onResponse(
-                    call: Call<MainResponseModel>,
-                    response: Response<MainResponseModel>
-                ) {
-                    Log.d("RETROFIT", response.raw().toString())
+        deviceList?.apply {
+            Log.d("DBG:DATA", data.toString())
 
-                    if (response.isSuccessful()) { // <--> response.code == 200
-                        // 성공 처리
-                        Toast.makeText(
-                            applicationContext,
-                            response.body().toString(),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Log.d("RETROFIT", response.body().toString())
-                    } else { // code == 400
-                        // 실패 처리
+            val linedataList : ArrayList<LineDataSet> = ArrayList()
+
+            for(d in data.indices){
+                val deviceType = data[d].type
+                val entryList : ArrayList<Entry> = ArrayList()
+
+                // 각 y축을 그리기 위해, x축 0위치에 투명한 circle을 그린다.
+                entryList.add(Entry(0f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+
+                // 각 라벨리스트를 순회하며 Adl 수신 값중에 해당하는 type이 있는지 찾는다.
+                adlList?.apply {
+                    for(d_ in data){
+                        // Adl 수신정보 중 타입이 일치하는 값이 있으면 해당값을 entryList에 추가한다
+                        if(deviceType == d_.type){
+                            // ON/OFF 밸류에 따라 아이콘을 따로 처리해야하기 때문에 분기한다.
+                            when (d_.value) {
+                                "ON" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+                                "OFF" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+                            }
+                        }
                     }
                 }
+                val linedata = LineDataSet(entryList, deviceType)
+                linedata.lineWidth = 0f
+                linedata.setDrawValues(false)
+                linedata.setDrawCircles(false)
+                linedataList.add(linedata)
+            }
 
-                override fun onFailure(call: Call<MainResponseModel>, t: Throwable) {
-                    Log.d("RETROFIT", t.toString())
-                }
-            })
+            Log.d("DBG:LINE", linedataList.toString())
 
+            val dataSet: ArrayList<ILineDataSet> = ArrayList()
+            for(ld in linedataList){
+                dataSet.add(ld)
+            }
+            dataSet.reverse()
 
+            // 모든 과정이 끝나면 차트 그리기
+            setData(binding.mainChart, dataSet)
+        }
+    }
+
+    private fun setData(chart: LineChart, dataSet: ArrayList<ILineDataSet>) {
+//        val entries_0_on = ArrayList<Entry>()
+//        entries_0_on.add(Entry(convertTimeToMin("10:44:23"), 0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+//        entries_0_on.add(Entry(convertTimeToMin("13:44:23"), 0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+//
+//        val entries_1_on = ArrayList<Entry>()
+//
+//        val entries2 = ArrayList<Entry>()
+//        entries2.add(Entry(1.4f, 10.0f))
+//        entries2.add(Entry(3.4f, 10.0f))
+//        entries2.add(Entry(3.6f, 10.0f))
+//        entries2.add(Entry(4.2f, 10.0f))
+//
+//        var set = LineDataSet(entries_0_on, "환경 경보") // 데이터셋 초기화
+//        var set0 = LineDataSet(entries_1_on, "환경 경보") // 데이터셋 초기화
+//
+//        var set2 = LineDataSet(entries2, "전자렌지") // 데이터셋 초기화
+//        Log.d("DATA", "setted")
+//
+//        set.lineWidth = 0f
+//        set.setDrawValues(false)
+//        set2.lineWidth = 0f
+//        set2.setDrawValues(false)
+//
+//        val dataSet: ArrayList<ILineDataSet> = ArrayList()
+//        dataSet.add(set)
+//        dataSet.add(set0)
+//        dataSet.add(set2)
+//
+//        dataSet.reverse()
+
+        val data = LineData(dataSet)
+        chart.run {
+            description.isEnabled = true // 차트 옆에 별도로 표기되는 description을 안보이게 설정 (false)
+            setPinchZoom(false) // 핀치줌(두손가락으로 줌인 줌 아웃하는것) 설정
+            setDrawGridBackground(false)//격자구조 넣을건지
+            setTouchEnabled(true) // 그래프 터치해도 아무 변화없게 막음
+            animateY(1000) // 밑에서부터 올라오는 애니매이션 적용
+
+            axisRight.isEnabled = false // 오른쪽 Y축을 안보이게 해줌.
+
+            axisLeft.run { //왼쪽 축. 즉 Y방향 축을 뜻한다.
+                // setDrawBarShadow(false) //그래프의 그림자
+                // axisLineColor = ContextCompat.getColor(context,R.color.design_default_color_secondary_variant) // 축 색깔 설정
+                // gridColor = ContextCompat.getColor(context,R.color.design_default_color_on_secondary) // 축 아닌 격자 색깔 설정
+                // textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) // 라벨 텍스트 컬러 설정
+                // axisMaximum = 30f //100 위치에 선을 그리기 위해 101f로 맥시멈값 설정
+                // axisMinimum = 0f // 최소값 0
+                granularity = 10f // 50 단위마다 선을 그리려고 설정
+                setDrawLabels(true) // 값 적는거 허용 (0, 50, 100)
+                setDrawGridLines(true) //격자 라인 활용
+                setDrawAxisLine(false) // 축 그리기 설정
+                textSize = 13f //라벨 텍스트 크기
+            }
+
+            xAxis.run {
+                // textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) //라벨 색상
+                position = XAxis.XAxisPosition.BOTTOM //X축을 아래에다가 둔다.
+                granularity = 0.1f // 1 단위만큼 간격 두기
+                setDrawAxisLine(true) // 축 그림
+                setDrawGridLines(false) // 격자
+                textSize = 12f // 텍스트 크기
+                xAxis.valueFormatter = TimeAxisValueFormat()
+                xAxis.setDrawLabels(true)  // Label 표시 여부
+                xAxis.axisMinimum = 0f  // -240f : 오전 5시, 0f : 오전 9시
+                xAxis.axisMaximum = 1440f
+            }
+
+            legend.run {
+                isEnabled = false //차트 범례 설정
+                horizontalAlignment = Legend.LegendHorizontalAlignment.LEFT
+                verticalAlignment = Legend.LegendVerticalAlignment.CENTER
+                orientation = Legend.LegendOrientation.VERTICAL
+                formSize = 20f
+                yEntrySpace = 50f
+                xOffset = 20f
+                setDrawInside(false)
+            }
+
+            this.data = data //차트의 데이터를 data로 설정해줌.
+            invalidate()
+            setMaxVisibleValueCount(10000)
+        }
     }
 
     private fun convertTimeToMin(value: String): Float {
@@ -100,215 +255,17 @@ class MainLineActivity :
         if (timeMin < 0) {
             timeMin = 1440f + timeMin
         }
-        Log.d("time", timeMin.toString())
+//        Log.d("time", timeMin.toString())
 
         return timeMin.toFloat()// 오전9시 기준이기 때문에 540빼줌
     }
 
-    private fun setData(chart: LineChart) {
-        val entries_0_on = ArrayList<Entry>()
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("10:44:23"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_up_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("12:14:13"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_down_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("13:24:53"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_up_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("14:34:00"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_up_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("15:44:00"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_up_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("16:40:43"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_down_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("07:40:43"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_down_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("19:05:23"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_up_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("04:05:23"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_up_24
-                )
-            )
-        )
-        entries_0_on.add(
-            Entry(
-                convertTimeToMin("05:05:23"),
-                0.0f,
-                AppCompatResources.getDrawable(
-                    applicationContext,
-                    R.drawable.ic_baseline_arrow_drop_up_24
-                )
-            )
-        )
-
-//        entries_0_on.add(Entry(104.3888f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-//        entries_0_on.add(Entry(5.3833333f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-//        entries_0_on.add(Entry(460.3833333f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-//        entries_0_on.add(Entry(1430.3833333f,0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-
-
-        val entries2 = ArrayList<Entry>()
-        entries2.add(Entry(1.4f, 10.0f))
-        entries2.add(Entry(3.4f, 10.0f))
-        entries2.add(Entry(3.6f, 10.0f))
-        entries2.add(Entry(4.2f, 10.0f))
-
-        val entries3 = ArrayList<Entry>()
-        entries3.add(Entry(1.4f, 20.0f))
-        entries3.add(Entry(3.4f, 20.0f))
-        entries3.add(Entry(3.6f, 20.0f))
-
-        val entries4 = ArrayList<Entry>()
-        entries4.add(Entry(1.4f, 30.0f))
-        entries4.add(Entry(3.4f, 30.0f))
-
-
-        chart.run {
-            description.isEnabled = true // 차트 옆에 별도로 표기되는 description을 안보이게 설정 (false)
-            setPinchZoom(false) // 핀치줌(두손가락으로 줌인 줌 아웃하는것) 설정
-//            setDrawBarShadow(false) //그래프의 그림자
-            setDrawGridBackground(false)//격자구조 넣을건지
-            axisLeft.run { //왼쪽 축. 즉 Y방향 축을 뜻한다.
-//                axisMaximum = 30f //100 위치에 선을 그리기 위해 101f로 맥시멈값 설정
-//                axisMinimum = 0f // 최소값 0
-                granularity = 10f // 50 단위마다 선을 그리려고 설정
-                setDrawLabels(true) // 값 적는거 허용 (0, 50, 100)
-                setDrawGridLines(true) //격자 라인 활용
-                setDrawAxisLine(false) // 축 그리기 설정
-//                axisLineColor = ContextCompat.getColor(context,R.color.design_default_color_secondary_variant) // 축 색깔 설정
-//                gridColor = ContextCompat.getColor(context,R.color.design_default_color_on_secondary) // 축 아닌 격자 색깔 설정
-//                textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) // 라벨 텍스트 컬러 설정
-                textSize = 13f //라벨 텍스트 크기
-            }
-            xAxis.run {
-                position = XAxis.XAxisPosition.BOTTOM //X축을 아래에다가 둔다.
-                granularity = 0.1f // 1 단위만큼 간격 두기
-                setDrawAxisLine(true) // 축 그림
-                setDrawGridLines(false) // 격자
-//                textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) //라벨 색상
-                textSize = 12f // 텍스트 크기
-
-                xAxis.valueFormatter = TimeAxisValueFormat()
-                xAxis.setDrawLabels(true)  // Label 표시 여부
-                xAxis.axisMinimum = 0f  // -240f : 오전 5시, 0f : 오전 9시
-                xAxis.axisMaximum = 1440f
-            }
-            axisRight.isEnabled = false // 오른쪽 Y축을 안보이게 해줌.
-            setTouchEnabled(true) // 그래프 터치해도 아무 변화없게 막음
-            animateY(1000) // 밑에서부터 올라오는 애니매이션 적용
-            legend.isEnabled = false //차트 범례 설정
-            legend.horizontalAlignment = Legend.LegendHorizontalAlignment.LEFT
-            legend.verticalAlignment = Legend.LegendVerticalAlignment.CENTER
-            legend.orientation = Legend.LegendOrientation.VERTICAL
-            legend.formSize = 20f
-            legend.yEntrySpace = 50f
-            legend.xOffset = 20f
-            legend.setDrawInside(false)
-        }
-
-        var set = LineDataSet(entries_0_on, "환경 경보") // 데이터셋 초기화
-        var set2 = LineDataSet(entries2, "전자렌지") // 데이터셋 초기화
-        var set3 = LineDataSet(entries3, "변기") // 데이터셋 초기화
-        var set4 = LineDataSet(entries4, "냉장고") // 데이터셋 초기화
-        Log.d("DATA", "setted")
-
-        set.lineWidth = 0f
-        set.setDrawValues(false)
-        set2.lineWidth = 0f
-        set2.setDrawValues(false)
-        set3.lineWidth = 0f
-        set3.setDrawValues(false)
-        set4.lineWidth = 0f
-        set4.setDrawValues(false)
-
-//        set.color = ContextCompat.getColor(applicationContext!!,R.color.main_color)// 바 그래프 색 설정
-//        set2.color = ContextCompat.getColor(applicationContext!!,R.color.grey) // 바 그래프 색 설정
-//        set3.color = ContextCompat.getColor(applicationContext!!,R.color.purple_200) // 바 그래프 색 설정
-//        set4.color = ContextCompat.getColor(applicationContext!!,R.color.teal_200) // 바 그래프 색 설정
-
-        val dataSet: ArrayList<ILineDataSet> = ArrayList()
-        dataSet.add(set)
-        dataSet.add(set2)
-        dataSet.add(set3)
-        dataSet.add(set4)
-
-        dataSet.reverse()
-
-        val data = LineData(dataSet)
-        chart.run {
-            this.data = data //차트의 데이터를 data로 설정해줌.
-            invalidate()
-            setMaxVisibleValueCount(10000)
-        }
+    private fun timestampToTime(timestamp: Timestamp) : String{
+        val time = timestamp.time
+        val res = SimpleDateFormat("hh:mm:ss", Locale.KOREA).format(Date(time))
+        Log.d("DBG::TIME", res.toString())
+        return res
     }
-
 
     override fun onClick(view: View?) {
         when (view?.id) {
@@ -324,6 +281,5 @@ class MainLineActivity :
             }
         }
     }
-
 
 }

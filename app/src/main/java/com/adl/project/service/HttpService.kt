@@ -1,9 +1,12 @@
 package com.adl.project.service
 
+import com.adl.project.model.adl.AdlListModel
 import com.adl.project.model.adl.AdlModel
+import com.adl.project.model.adl.DeviceListModel
 import com.adl.project.model.test.PostModel
-import com.adl.project.model.adl.MainResponseModel
 import com.glacier.notihttppost.service.UnsafeOkHttpClient
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -17,24 +20,31 @@ interface HttpService {
         "content-type: application/x-www-form-urlencoded","charset:utf-8")
     fun post_users(
         @Body jsonparams: PostModel
-    ): Call<MainResponseModel>
+    ): Call<List<AdlModel>>
 
-    @GET("AB001309")
-    fun getMainData(
+    @GET(".")
+    @Headers("accept: application/json","charset:utf-8")
+    suspend fun getMainData(
         @Query("from") from: String, //요구하는 기본인자를 @Query형태로
         @Query("to") to: String
-    ): Call<MainResponseModel>
+    ): String
+
+    @GET(".")
+    @Headers("accept: application/json","charset:utf-8")
+    suspend fun getDeviceData(): String
+
+
 
     companion object {
         var okHttpClient: OkHttpClient = UnsafeOkHttpClient.unsafeOkHttpClient
 
         fun create(BASE_URL: String): HttpService {
-//            val gson : Gson = GsonBuilder().setLenient().create();
+            val gson : Gson = GsonBuilder().create();
 
             return Retrofit.Builder()
                 .baseUrl(BASE_URL)
 //                .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
                 .build()
                 .create(HttpService::class.java)
         }
