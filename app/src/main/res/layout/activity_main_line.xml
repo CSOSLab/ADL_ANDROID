@@ -3,7 +3,6 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_marginHorizontal="5dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -13,115 +12,6 @@
         android:orientation="horizontal"
         tools:context=".ui.activity.MainActivity">
 
-<!--        <LinearLayout-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:gravity="center"-->
-<!--            android:orientation="vertical">-->
-
-<!--            <LinearLayout-->
-<!--                android:id="@+id/btn_1"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:layout_marginLeft="10dp"-->
-<!--                android:layout_weight="1"-->
-<!--                android:orientation="horizontal">-->
-
-<!--                <View-->
-<!--                    android:layout_width="30dp"-->
-<!--                    android:layout_height="30dp"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:background="@color/teal_200" />-->
-
-<!--                <TextView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:layout_marginHorizontal="6dp"-->
-<!--                    android:fontFamily="@font/nanumgothicbold"-->
-<!--                    android:text="냉장고"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:textSize="15dp"-->
-<!--                    android:textStyle="bold" />-->
-<!--            </LinearLayout>-->
-
-<!--            <LinearLayout-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:layout_marginLeft="10dp"-->
-<!--                android:layout_weight="1"-->
-<!--                android:orientation="horizontal">-->
-
-<!--                <View-->
-<!--                    android:layout_width="30dp"-->
-<!--                    android:layout_height="30dp"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:background="@color/purple_200" />-->
-
-<!--                <TextView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:layout_marginHorizontal="6dp"-->
-<!--                    android:fontFamily="@font/nanumgothicbold"-->
-<!--                    android:text="변기"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:textSize="15dp"-->
-<!--                    android:textStyle="bold" />-->
-<!--            </LinearLayout>-->
-
-<!--            <LinearLayout-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:layout_marginLeft="10dp"-->
-<!--                android:layout_weight="1"-->
-<!--                android:orientation="horizontal">-->
-
-<!--                <View-->
-<!--                    android:layout_width="30dp"-->
-<!--                    android:layout_height="30dp"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:background="@color/grey" />-->
-
-<!--                <TextView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:layout_marginHorizontal="6dp"-->
-<!--                    android:fontFamily="@font/nanumgothicbold"-->
-<!--                    android:text="전자렌지"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:textSize="15dp"-->
-<!--                    android:textStyle="bold" />-->
-<!--            </LinearLayout>-->
-
-<!--            <LinearLayout-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:layout_marginLeft="10dp"-->
-<!--                android:layout_weight="1"-->
-<!--                android:orientation="horizontal">-->
-
-<!--                <View-->
-<!--                    android:layout_width="30dp"-->
-<!--                    android:layout_height="30dp"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:background="@color/main_color" />-->
-
-<!--                <TextView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:layout_marginHorizontal="6dp"-->
-<!--                    android:fontFamily="@font/nanumgothicbold"-->
-<!--                    android:text="환경 경보"-->
-<!--                    android:textColor="@color/black"-->
-<!--                    android:textSize="15dp"-->
-<!--                    android:textStyle="bold" />-->
-<!--            </LinearLayout>-->
-
-<!--        </LinearLayout>-->
-
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/main_chart"
             android:layout_width="match_parent"
@@ -129,16 +19,6 @@
             android:background="@color/white" />
 
     </LinearLayout>
-
-<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_margin="15dp"-->
-<!--        app:borderWidth="0dp"-->
-<!--        android:layout_gravity="bottom|right"-->
-<!--        android:backgroundTint="@color/grey"-->
-<!--        android:src="@drawable/ic_baseline_dehaze_24"-->
-<!--        app:tint="@color/white"/>-->
 
     <com.nambimobile.widgets.efab.ExpandableFabLayout
         android:layout_width="match_parent"

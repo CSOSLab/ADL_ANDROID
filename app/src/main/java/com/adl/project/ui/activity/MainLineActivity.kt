@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.marginBottom
 import com.adl.project.R
 import com.adl.project.common.*
 import com.adl.project.common.enum.TransitionMode
@@ -21,13 +22,13 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.google.gson.Gson
 import kotlinx.coroutines.*
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 /**
@@ -42,18 +43,20 @@ class MainLineActivity :
 
     var adlList : AdlListModel? = null
     var deviceList : DeviceListModel? = null
+    var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 메인쓰레드 UI건드리는 작업이므로 코루틴 Dispatchers.Main 사용
         CoroutineScope(Dispatchers.Main).launch {
             connectToServer()
         }
+
         setInitialize()
     }
 
     private fun setInitialize() {
-        //TODO -- mpchart, 범례 여러개 사용해서, 각 범례마다 y값 지정 (ex 0,10,20,30,40) 그리고 dot&line graph에서 line 제거해서 표현
-//        setData(binding.mainChart)
         binding.btnAnal.setOnClickListener(this@MainLineActivity)
         binding.btnSetting.setOnClickListener(this@MainLineActivity)
     }
@@ -81,7 +84,7 @@ class MainLineActivity :
     }
 
     suspend fun connectToServer() {
-        // TODO :: 코루틴 도입 -> getDevice, getAdl 을 UI쓰레드에서 분리시키고, 서버연동 과정이 끝나면 차트 그리기. 서버와 연결이 불가능하면 안내문구 띄운 후 앱 종료.
+        // TODO :: 코루틴 도입 -> getDevice, getAdl 을 UI쓰레드에서 분리시키고, 서버연동 과정이 끝나면 차트 그리기. !서버와 연결이 불가능하면 안내문구 띄운 후 앱 종료.
         val job = CoroutineScope(Dispatchers.IO).launch {
             try {
                 getDevice()
@@ -115,6 +118,10 @@ class MainLineActivity :
             for(d in data.indices){
                 val deviceType = data[d].type
                 val entryList : ArrayList<Entry> = ArrayList()
+                val labelIndex = d * 10f
+
+                // 라벨인덱스를 map 자료형에 미리 저장한다.
+                labelIndexMap?.put(labelIndex, data[d].type)
 
                 // 각 y축을 그리기 위해, x축 0위치에 투명한 circle을 그린다.
                 entryList.add(Entry(0f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
@@ -128,10 +135,18 @@ class MainLineActivity :
                             when (d_.value) {
                                 "ON" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
                                 "OFF" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+                                "과열" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))
+                                "OPEN" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_input_24)))
+                                "CLOSE" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_output_24)))
+                                "대변" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_square_24)))
+                                "소변" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_water_drop_24)))
+                                "공기질나쁨" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24)))
+                                "이상화탄소과다" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24)))
                             }
                         }
                     }
                 }
+
                 val linedata = LineDataSet(entryList, deviceType)
                 linedata.lineWidth = 0f
                 linedata.setDrawValues(false)
@@ -153,39 +168,18 @@ class MainLineActivity :
     }
 
     private fun setData(chart: LineChart, dataSet: ArrayList<ILineDataSet>) {
-//        val entries_0_on = ArrayList<Entry>()
-//        entries_0_on.add(Entry(convertTimeToMin("10:44:23"), 0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-//        entries_0_on.add(Entry(convertTimeToMin("13:44:23"), 0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-//
-//        val entries_1_on = ArrayList<Entry>()
-//
-//        val entries2 = ArrayList<Entry>()
-//        entries2.add(Entry(1.4f, 10.0f))
-//        entries2.add(Entry(3.4f, 10.0f))
-//        entries2.add(Entry(3.6f, 10.0f))
-//        entries2.add(Entry(4.2f, 10.0f))
-//
-//        var set = LineDataSet(entries_0_on, "환경 경보") // 데이터셋 초기화
-//        var set0 = LineDataSet(entries_1_on, "환경 경보") // 데이터셋 초기화
-//
-//        var set2 = LineDataSet(entries2, "전자렌지") // 데이터셋 초기화
-//        Log.d("DATA", "setted")
-//
-//        set.lineWidth = 0f
-//        set.setDrawValues(false)
-//        set2.lineWidth = 0f
-//        set2.setDrawValues(false)
-//
-//        val dataSet: ArrayList<ILineDataSet> = ArrayList()
-//        dataSet.add(set)
-//        dataSet.add(set0)
-//        dataSet.add(set2)
-//
-//        dataSet.reverse()
+        // 테스트 더미 데이터 코드
+        /* val entries_0_on = ArrayList<Entry>()
+        entries_0_on.add(Entry(convertTimeToMin("10:44:23"), 0.0f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+        var set = LineDataSet(entries_0_on, "환경 경보") // 데이터셋 초기화
+        set.lineWidth = 0f
+        set.setDrawValues(false)
+        val dataSet: ArrayList<ILineDataSet> = ArrayList()
+        dataSet.reverse() */
 
         val data = LineData(dataSet)
         chart.run {
-            description.isEnabled = true // 차트 옆에 별도로 표기되는 description을 안보이게 설정 (false)
+            description.isEnabled = false // 차트 옆에 별도로 표기되는 description을 안보이게 설정 (false)
             setPinchZoom(false) // 핀치줌(두손가락으로 줌인 줌 아웃하는것) 설정
             setDrawGridBackground(false)//격자구조 넣을건지
             setTouchEnabled(true) // 그래프 터치해도 아무 변화없게 막음
@@ -198,12 +192,26 @@ class MainLineActivity :
                 // axisLineColor = ContextCompat.getColor(context,R.color.design_default_color_secondary_variant) // 축 색깔 설정
                 // gridColor = ContextCompat.getColor(context,R.color.design_default_color_on_secondary) // 축 아닌 격자 색깔 설정
                 // textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) // 라벨 텍스트 컬러 설정
-                // axisMaximum = 30f //100 위치에 선을 그리기 위해 101f로 맥시멈값 설정
+                // axisMaximum = 70f //100 위치에 선을 그리기 위해 101f로 맥시멈값 설정
                 // axisMinimum = 0f // 최소값 0
-                granularity = 10f // 50 단위마다 선을 그리려고 설정
+                granularity = 10f
+                labelCount = data.dataSetCount// 단위마다 선을 그리려고 설정
                 setDrawLabels(true) // 값 적는거 허용 (0, 50, 100)
                 setDrawGridLines(true) //격자 라인 활용
                 setDrawAxisLine(false) // 축 그리기 설정
+
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        var label = ""
+                        labelIndexMap?.apply {
+                            if (containsKey(value)) {
+                                label = get(value).toString()
+                                // Log.d("DBG::LABEL", label)
+                            }
+                        }
+                        return label
+                    }
+                }
                 textSize = 13f //라벨 텍스트 크기
             }
 
@@ -211,13 +219,13 @@ class MainLineActivity :
                 // textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) //라벨 색상
                 position = XAxis.XAxisPosition.BOTTOM //X축을 아래에다가 둔다.
                 granularity = 0.1f // 1 단위만큼 간격 두기
-                setDrawAxisLine(true) // 축 그림
+                setDrawAxisLine(false) // 축 그림
                 setDrawGridLines(false) // 격자
-                textSize = 12f // 텍스트 크기
-                xAxis.valueFormatter = TimeAxisValueFormat()
-                xAxis.setDrawLabels(true)  // Label 표시 여부
-                xAxis.axisMinimum = 0f  // -240f : 오전 5시, 0f : 오전 9시
-                xAxis.axisMaximum = 1440f
+                textSize = 15f // 텍스트 크기
+                this.valueFormatter = TimeAxisValueFormat()
+                setDrawLabels(true)  // Label 표시 여부
+                axisMinimum = 0f  // -240f : 오전 5시, 0f : 오전 9시
+                axisMaximum = 1440f
             }
 
             legend.run {
@@ -234,6 +242,7 @@ class MainLineActivity :
             this.data = data //차트의 데이터를 data로 설정해줌.
             invalidate()
             setMaxVisibleValueCount(10000)
+            zoom
         }
     }
 
@@ -255,7 +264,7 @@ class MainLineActivity :
         if (timeMin < 0) {
             timeMin = 1440f + timeMin
         }
-//        Log.d("time", timeMin.toString())
+        // Log.d("time", timeMin.toString())
 
         return timeMin.toFloat()// 오전9시 기준이기 때문에 540빼줌
     }
@@ -263,7 +272,7 @@ class MainLineActivity :
     private fun timestampToTime(timestamp: Timestamp) : String{
         val time = timestamp.time
         val res = SimpleDateFormat("hh:mm:ss", Locale.KOREA).format(Date(time))
-        Log.d("DBG::TIME", res.toString())
+        // Log.d("DBG::TIME", res.toString())
         return res
     }
 
