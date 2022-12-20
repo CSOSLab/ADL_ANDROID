@@ -1,5 +1,6 @@
 package com.adl.project.ui.activity
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -41,24 +42,34 @@ class MainLineActivity :
     BaseActivity<ActivityMainLineBinding>(ActivityMainLineBinding::inflate, TransitionMode.FADE),
     View.OnClickListener {
 
+    var selectedStartDate : String = "2022-12-17"
+
     var adlList : AdlListModel? = null
     var deviceList : DeviceListModel? = null
     var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 메인쓰레드 UI건드리는 작업이므로 코루틴 Dispatchers.Main 사용
-        CoroutineScope(Dispatchers.Main).launch {
-            connectToServer()
-        }
-
+        setChartWithDate()
         setInitialize()
     }
 
     private fun setInitialize() {
         binding.btnAnal.setOnClickListener(this@MainLineActivity)
         binding.btnSetting.setOnClickListener(this@MainLineActivity)
+        binding.btnDate.setOnClickListener(this@MainLineActivity)
+    }
+
+    private fun setChartWithDate(){
+        // 데이터 초기화
+        adlList = null
+        deviceList = null
+        labelIndexMap?.clear()
+
+        // 메인쓰레드 UI건드리는 작업이므로 코루틴 Dispatchers.Main 사용
+        CoroutineScope(Dispatchers.Main).launch {
+            connectToServer()
+        }
     }
 
     /* TODO :: 서버 연결 ->
@@ -74,11 +85,13 @@ class MainLineActivity :
         deviceList = Gson().fromJson(data, DeviceListModel::class.java)
     }
 
-    private suspend fun getAdl(){
+    private suspend fun getAdl(startDate: String){
         val URL2 = "http://155.230.186.66:8000/ADLs/"
         val SLIMHUB = "AB001309"
         val server2 = HttpService.create(URL2 + SLIMHUB + "/")
-        val data = server2.getMainData("2022-12-17", "2022-12-18")
+
+        val endDate = getNextDay(startDate)
+        val data = server2.getMainData(startDate, endDate)
         Log.d("DBG::RETRO", data)
         adlList = Gson().fromJson(data, AdlListModel::class.java)
     }
@@ -88,7 +101,7 @@ class MainLineActivity :
         val job = CoroutineScope(Dispatchers.IO).launch {
             try {
                 getDevice()
-                getAdl()
+                getAdl(selectedStartDate)
             } catch (e:Exception){
                 val handler = Handler(Looper.getMainLooper())
                 handler.postDelayed(java.lang.Runnable { Toast.makeText(applicationContext,"서버와 연결이 불안정해 앱을 종료합니다.", Toast.LENGTH_LONG).show() }, 0)
@@ -242,7 +255,8 @@ class MainLineActivity :
             this.data = data //차트의 데이터를 data로 설정해줌.
             invalidate()
             setMaxVisibleValueCount(10000)
-            zoom
+            notifyDataSetChanged()
+
         }
     }
 
@@ -276,6 +290,16 @@ class MainLineActivity :
         return res
     }
 
+    private fun getNextDay(startDate: String): String{
+        var sdf = SimpleDateFormat("yyyy-MM-dd", Locale.KOREA)
+        var calendar = Calendar.getInstance()
+        calendar.time = sdf.parse(startDate)!!
+        calendar.add(Calendar.DATE, 1)
+
+        Log.d("DBG::TIME",sdf.format(calendar.time))
+        return sdf.format(calendar.time)
+    }
+
     override fun onClick(view: View?) {
         when (view?.id) {
             R.id.btn_anal -> {
@@ -287,6 +311,20 @@ class MainLineActivity :
             R.id.btn_setting -> {
                 val intent = Intent(applicationContext, SettingActivity::class.java)
                 startActivity(intent)
+            }
+            R.id.btn_date -> {
+                // 캘린더 온클릭리스너
+                // 선택한 날짜를 selectedStartDate로 만든 후 차트 데이터 재연동
+                // (month가 0으로 시작하는 issue 있어서 +1 해주기)
+                val data = DatePickerDialog.OnDateSetListener { view, year, month, day ->
+                    selectedStartDate = "${year}-${month + 1}-${day}"
+                    Log.d("DBG::SELECTEDDATE", selectedStartDate)
+                    setChartWithDate()
+                }
+
+                // 캘린더객체 생성 (오늘날짜 디폴트선택)
+                val cal = Calendar.getInstance()
+                DatePickerDialog(this, data, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
             }
         }
     }
