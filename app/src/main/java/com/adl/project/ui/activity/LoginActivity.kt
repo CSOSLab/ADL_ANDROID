@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.adl.project.common.enum.TransitionMode
 import com.adl.project.databinding.ActivityLoginBinding
-import com.adl.project.databinding.ActivityMainBinding
 import com.adl.project.ui.base.BaseActivity
 
 /**
@@ -22,12 +21,12 @@ class LoginActivity : BaseActivity<ActivityLoginBinding>(ActivityLoginBinding::i
 
     fun setInitialize(){
         binding.btnLogin1.setOnClickListener {
-            val intent = Intent(applicationContext, MainActivity::class.java)
+            val intent = Intent(applicationContext, MainLineActivity::class.java)
             startActivity(intent)
         }
 
         binding.btnLogin2.setOnClickListener {
-            val intent = Intent(applicationContext, MainActivity::class.java)
+            val intent = Intent(applicationContext, MainLineActivity::class.java)
             startActivity(intent)
         }
     }

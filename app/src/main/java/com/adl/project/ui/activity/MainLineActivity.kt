@@ -9,11 +9,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.view.marginBottom
 import com.adl.project.R
-import com.adl.project.common.*
 import com.adl.project.common.enum.TransitionMode
-import com.adl.project.common.util.TimeAxisValueFormat
+import com.adl.project.common.util.TimeAxisValueFormatManager
+import com.adl.project.common.util.UtilManager
 import com.adl.project.databinding.ActivityMainLineBinding
 import com.adl.project.model.adl.AdlListModel
 import com.adl.project.model.adl.DeviceListModel
@@ -30,7 +29,6 @@ import kotlinx.coroutines.*
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
-
 
 /**
  * ADL_MONITORING_APP by CSOS PROJECT
@@ -90,7 +88,7 @@ class MainLineActivity :
         val SLIMHUB = "AB001309"
         val server2 = HttpService.create(URL2 + SLIMHUB + "/")
 
-        val endDate = getNextDay(startDate)
+        val endDate = UtilManager.getNextDay(startDate)
         val data = server2.getMainData(startDate, endDate)
         Log.d("DBG::RETRO", data)
         adlList = Gson().fromJson(data, AdlListModel::class.java)
@@ -146,15 +144,15 @@ class MainLineActivity :
                         if(deviceType == d_.type){
                             // ON/OFF 밸류에 따라 아이콘을 따로 처리해야하기 때문에 분기한다.
                             when (d_.value) {
-                                "ON" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-                                "OFF" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-                                "과열" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))
-                                "OPEN" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_input_24)))
-                                "CLOSE" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_output_24)))
-                                "대변" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_square_24)))
-                                "소변" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_water_drop_24)))
-                                "공기질나쁨" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24)))
-                                "이상화탄소과다" -> entryList.add(Entry(convertTimeToMin(timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24)))
+                                "ON" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+                                "OFF" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+                                "과열" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))
+                                "OPEN" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_input_24)))
+                                "CLOSE" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_output_24)))
+                                "대변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_square_24)))
+                                "소변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_water_drop_24)))
+                                "공기질나쁨" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24)))
+                                "이상화탄소과다" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24)))
                             }
                         }
                     }
@@ -235,7 +233,7 @@ class MainLineActivity :
                 setDrawAxisLine(false) // 축 그림
                 setDrawGridLines(false) // 격자
                 textSize = 15f // 텍스트 크기
-                this.valueFormatter = TimeAxisValueFormat()
+                this.valueFormatter = TimeAxisValueFormatManager()
                 setDrawLabels(true)  // Label 표시 여부
                 axisMinimum = 0f  // -240f : 오전 5시, 0f : 오전 9시
                 axisMaximum = 1440f
@@ -258,46 +256,6 @@ class MainLineActivity :
             notifyDataSetChanged()
 
         }
-    }
-
-    private fun convertTimeToMin(value: String): Float {
-        // HH:mm:ss
-        var timeMin = 0.0
-        try {
-            timeMin += value.split(":")[1].toInt() //분
-            timeMin += value.split(":")[0].toInt() * 60 //시
-            timeMin += value.split(":")[2].toInt() / 60.0
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        // 오전 9시가 0이 되어야하는 상황
-        timeMin -= 540f
-        // 오전 7시 처리
-        if (timeMin < 0) {
-            timeMin = 1440f + timeMin
-        }
-        // Log.d("time", timeMin.toString())
-
-        return timeMin.toFloat()// 오전9시 기준이기 때문에 540빼줌
-    }
-
-    private fun timestampToTime(timestamp: Timestamp) : String{
-        val time = timestamp.time
-        val res = SimpleDateFormat("hh:mm:ss", Locale.KOREA).format(Date(time))
-        // Log.d("DBG::TIME", res.toString())
-        return res
-    }
-
-    private fun getNextDay(startDate: String): String{
-        var sdf = SimpleDateFormat("yyyy-MM-dd", Locale.KOREA)
-        var calendar = Calendar.getInstance()
-        calendar.time = sdf.parse(startDate)!!
-        calendar.add(Calendar.DATE, 1)
-
-        Log.d("DBG::TIME",sdf.format(calendar.time))
-        return sdf.format(calendar.time)
     }
 
     override fun onClick(view: View?) {

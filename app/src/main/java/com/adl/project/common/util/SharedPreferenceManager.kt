@@ -2,6 +2,12 @@ package com.adl.project.common.util
 import android.content.Context
 import android.content.SharedPreferences
 
+/**
+ * ADL_MONITORING_APP by CSOS PROJECT
+ * DEVELOPER : 한병하 (Glacier Han)
+ * TODO :: SharedPreference를 편하게 사용하기 위한 Manager 클래스
+ */
+
 class SharedPreferenceManager {
 
     companion object {
