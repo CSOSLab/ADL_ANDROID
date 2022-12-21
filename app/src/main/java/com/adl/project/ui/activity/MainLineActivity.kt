@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import com.adl.project.R
+import com.adl.project.common.*
 import com.adl.project.common.enum.TransitionMode
 import com.adl.project.common.util.TimeAxisValueFormatManager
 import com.adl.project.common.util.UtilManager
@@ -25,12 +26,11 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import com.github.mikephil.charting.utils.EntryXComparator
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-import java.sql.Timestamp
-import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
+
 
 /**
  * ADL_MONITORING_APP by CSOS PROJECT
@@ -43,15 +43,19 @@ class MainLineActivity :
     View.OnClickListener {
 
     var selectedStartDate : String = "2022-12-17"
-
+    var isFirst = true
     var adlList : AdlListModel? = null
     var deviceList : DeviceListModel? = null
     var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 앱 시작시에 기준일을 오늘로 변경
+        selectedStartDate = UtilManager.getToday().toString()
         setChartWithDate()
         setInitialize()
+
     }
 
     private fun setInitialize() {
@@ -61,6 +65,7 @@ class MainLineActivity :
     }
 
     private fun setChartWithDate(){
+
         // 데이터 초기화
         adlList = null
         deviceList = null
@@ -128,6 +133,8 @@ class MainLineActivity :
 
             // 최종 라인데이타셋 담을 리스트 선언
             val linedataList : ArrayList<LineDataSet> = ArrayList()
+            // 현재시간 표시할 데이터셋 선언 (세로긴줄)
+            val entryListNow : ArrayList<Entry> = ArrayList()
 
             // Location별 Color Map을 만들기 위한 로직
             // DeviceModel의 location 값들을 리스트에 담는다.
@@ -146,6 +153,7 @@ class MainLineActivity :
                 locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
             }
 
+            // ADL데이터 차트연동 로직
             for(d in data.indices){
                 val deviceType = data[d].type
                 val entryList : ArrayList<Entry> = ArrayList()
@@ -154,8 +162,9 @@ class MainLineActivity :
                 // 라벨인덱스를 map 자료형에 미리 저장한다.
                 labelIndexMap?.put(labelIndex, data[d].type)
 
-                // 각 y축을 그리기 위해, x축 0위치에 투명한 circle을 그린다.
+                // 각 type별 y축을 쭉 그리기 위해, x축 0과 1440 위치에 투명한 circle을 그린다.
                 entryList.add(Entry(0f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+                entryList.add(Entry(1439f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
 
                 // 각 라벨리스트를 순회하며 Adl 수신 값중에 해당하는 type이 있는지 찾는다.
                 adlList?.apply {
@@ -167,8 +176,8 @@ class MainLineActivity :
                                 "ON" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
                                 "OFF" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
                                 "과열" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))
-                                "OPEN" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_input_24)))
-                                "CLOSE" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_output_24)))
+                                "OPEN" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_forward_24)))
+                                "CLOSE" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_back_24)))
                                 "대변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_square_24)))
                                 "소변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_water_drop_24)))
                                 "공기질나쁨" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24)))
@@ -178,16 +187,39 @@ class MainLineActivity :
                     }
                 }
 
-                val linedata = LineDataSet(entryList, deviceType)
+                // 최종 ADL 데이터셋
+                Collections.sort(entryList, EntryXComparator()) // 차트 확대시 NegativeArraySizeException 오류 해결법
+                val lineData = LineDataSet(entryList, deviceType)
 
-                locationColorMap[data[d].location]?.apply {
-                    linedata.color = this
+                // 선택한 이력 날짜가 오늘일 경우 현재시간 실시간 업데이트 (세로긴줄)
+                // 오늘 데이터일 경우 현재시간 표시
+                val nowHighlightData = LineDataSet(entryListNow, "현재시간")
+                nowHighlightData.apply {
+                    lineWidth = 1.5f
+                    setDrawValues(false)
+                    setDrawCircles(false)
+                    color = Color.GRAY
                 }
 
-                linedata.lineWidth = 5f
-                linedata.setDrawValues(false)
-                linedata.setDrawCircles(false)
-                linedataList.add(linedata)
+                if(UtilManager.getToday() == selectedStartDate){
+                    entryListNow.add(Entry(UtilManager.convertTimeToMin(UtilManager.getNow()!!), lineData.yMax))
+                }
+
+                // location별 colormap을 실제 라인컬러에 적용한다 (null-safe 처리)
+                locationColorMap[data[d].location]?.apply {
+                    lineData.color = this
+                }
+
+                lineData.apply {
+                    lineWidth = 4f
+                    setDrawValues(false)
+                    setDrawCircles(false)
+                }
+
+                linedataList.apply {
+                    add(lineData)
+                    add(nowHighlightData)
+                }
             }
 
             Log.d("DBG:LINE", linedataList.toString())
@@ -196,7 +228,6 @@ class MainLineActivity :
             for(ld in linedataList){
                 dataSet.add(ld)
             }
-            dataSet.reverse()
 
             // 모든 과정이 끝나면 차트 그리기
             setData(binding.mainChart, dataSet)
@@ -219,7 +250,12 @@ class MainLineActivity :
             setPinchZoom(false) // 핀치줌(두손가락으로 줌인 줌 아웃하는것) 설정
             setDrawGridBackground(false)//격자구조 넣을건지
             setTouchEnabled(true) // 그래프 터치해도 아무 변화없게 막음
-            animateY(1000) // 밑에서부터 올라오는 애니매이션 적용
+
+            // 앱 실행이 처음일 경우에만 Animation 효과 적용
+            if(isFirst){
+                animateY(1000) // 밑에서부터 올라오는 애니매이션 적용
+                isFirst = false
+            }
 
             axisRight.isEnabled = false // 오른쪽 Y축을 안보이게 해줌.
 
@@ -277,7 +313,7 @@ class MainLineActivity :
 
             this.data = data //차트의 데이터를 data로 설정해줌.
             invalidate()
-            setMaxVisibleValueCount(10000)
+            setMaxVisibleValueCount(100000)
             notifyDataSetChanged()
 
         }

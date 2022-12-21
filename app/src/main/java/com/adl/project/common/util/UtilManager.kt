@@ -1,7 +1,5 @@
 package com.adl.project.common.util
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -43,8 +41,9 @@ class UtilManager {
 
         fun timestampToTime(timestamp: Timestamp): String {
             val time = timestamp.time
-            val res = SimpleDateFormat("hh:mm:ss", Locale.KOREA).format(Date(time))
-             Log.d("DBG::TIME", res.toString())
+            // hh -> HH 변경....;;;;;
+            val res = SimpleDateFormat("HH:mm:ss", Locale.KOREA).format(Date(time))
+//             Log.d("DBG::TIME", res.toString())
             return res
         }
 
@@ -56,6 +55,18 @@ class UtilManager {
 
             Log.d("DBG::TIME", sdf.format(calendar.time))
             return sdf.format(calendar.time)
+        }
+
+        // 오늘 날짜 구하기
+        fun getToday(): String? {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.KOREA)
+            return dateFormat.format(Date(System.currentTimeMillis()))
+        }
+
+        // 현재 시간 구하기
+        fun getNow(): String? {
+            val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.KOREA)
+            return dateFormat.format(Date(System.currentTimeMillis()))
         }
     }
 }
