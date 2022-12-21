@@ -2,6 +2,7 @@ package com.adl.project.ui.activity
 
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -29,6 +30,7 @@ import kotlinx.coroutines.*
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * ADL_MONITORING_APP by CSOS PROJECT
@@ -124,7 +126,25 @@ class MainLineActivity :
         deviceList?.apply {
             Log.d("DBG:DATA", data.toString())
 
+            // 최종 라인데이타셋 담을 리스트 선언
             val linedataList : ArrayList<LineDataSet> = ArrayList()
+
+            // Location별 Color Map을 만들기 위한 로직
+            // DeviceModel의 location 값들을 리스트에 담는다.
+            val locationList : ArrayList<String> = ArrayList()
+
+            for(d in data.indices){
+                locationList.add(data[d].location)
+            }
+
+            // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
+            locationList.distinct()
+            val locationColorMap : MutableMap<String, Int> = mutableMapOf()
+
+            // 각 Location별로 랜덤 컬러를 지정한다.
+            for(l in locationList){
+                locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
+            }
 
             for(d in data.indices){
                 val deviceType = data[d].type
@@ -152,14 +172,19 @@ class MainLineActivity :
                                 "대변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_square_24)))
                                 "소변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_water_drop_24)))
                                 "공기질나쁨" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24)))
-                                "이상화탄소과다" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24)))
+                                "이산화탄소과다" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24)))
                             }
                         }
                     }
                 }
 
                 val linedata = LineDataSet(entryList, deviceType)
-                linedata.lineWidth = 0f
+
+                locationColorMap[data[d].location]?.apply {
+                    linedata.color = this
+                }
+
+                linedata.lineWidth = 5f
                 linedata.setDrawValues(false)
                 linedata.setDrawCircles(false)
                 linedataList.add(linedata)
@@ -231,7 +256,7 @@ class MainLineActivity :
                 position = XAxis.XAxisPosition.BOTTOM //X축을 아래에다가 둔다.
                 granularity = 0.1f // 1 단위만큼 간격 두기
                 setDrawAxisLine(false) // 축 그림
-                setDrawGridLines(false) // 격자
+                setDrawGridLines(true) // 격자
                 textSize = 15f // 텍스트 크기
                 this.valueFormatter = TimeAxisValueFormatManager()
                 setDrawLabels(true)  // Label 표시 여부

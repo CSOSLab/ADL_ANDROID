@@ -44,7 +44,7 @@ class UtilManager {
         fun timestampToTime(timestamp: Timestamp): String {
             val time = timestamp.time
             val res = SimpleDateFormat("hh:mm:ss", Locale.KOREA).format(Date(time))
-            // Log.d("DBG::TIME", res.toString())
+             Log.d("DBG::TIME", res.toString())
             return res
         }
 
