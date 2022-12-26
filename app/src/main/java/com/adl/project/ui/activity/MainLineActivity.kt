@@ -10,9 +10,12 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.adl.project.R
+import com.adl.project.adapter.MainLegendAdapter
 import com.adl.project.common.*
 import com.adl.project.common.enum.TransitionMode
+import com.adl.project.common.listener.AdapterClickListener
 import com.adl.project.common.util.TimeAxisValueFormatManager
 import com.adl.project.common.util.UtilManager
 import com.adl.project.databinding.ActivityMainLineBinding
@@ -40,13 +43,15 @@ import java.util.*
 
 class MainLineActivity :
     BaseActivity<ActivityMainLineBinding>(ActivityMainLineBinding::inflate, TransitionMode.FADE),
-    View.OnClickListener {
+    View.OnClickListener, AdapterClickListener {
 
-    var selectedStartDate : String = "2022-12-17"
-    var isFirst = true
-    var adlList : AdlListModel? = null
-    var deviceList : DeviceListModel? = null
-    var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
+    private var mainLegendAdapter: MainLegendAdapter? = null
+    private var selectedStartDate : String = "2022-12-17"
+    private var isFirst = true
+    private var adlList : AdlListModel? = null
+    private var deviceList : DeviceListModel? = null
+    private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
+    private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,14 +59,29 @@ class MainLineActivity :
         // 앱 시작시에 기준일을 오늘로 변경
         selectedStartDate = UtilManager.getToday().toString()
         setChartWithDate()
-        setInitialize()
-
     }
 
     private fun setInitialize() {
         binding.btnAnal.setOnClickListener(this@MainLineActivity)
         binding.btnSetting.setOnClickListener(this@MainLineActivity)
         binding.btnDate.setOnClickListener(this@MainLineActivity)
+
+        // 날짜 모니터 초기화
+        binding.tvDateMonitor.text = selectedStartDate
+
+        // init recyclerview
+        mainLegendAdapter = MainLegendAdapter()
+
+        mainLegendAdapter?.let {
+            it.setItemClickListener(this@MainLineActivity)
+            it.setListInit(locationColorMap)
+        }
+
+        binding.rvMainLegend.apply {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.HORIZONTAL, true)
+            adapter = mainLegendAdapter
+        }
     }
 
     private fun setChartWithDate(){
@@ -120,6 +140,8 @@ class MainLineActivity :
 
             // TODO :: 축 설정
             setAxisWithData()
+            // TODO :: 모두 완료 후에 최종 화면 셋팅
+            setInitialize()
         }
 
     }
@@ -146,11 +168,13 @@ class MainLineActivity :
 
             // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
             locationList.distinct()
-            val locationColorMap : MutableMap<String, Int> = mutableMapOf()
 
             // 각 Location별로 랜덤 컬러를 지정한다.
             for(l in locationList){
-                locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
+                // 이상상황일 경우 무조건 RED 컬러 배치
+                if(l == "이상상황") locationColorMap[l] = Color.RED
+                // 나머지는 모두 랜덤
+                else locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
             }
 
             // ADL데이터 차트연동 로직
@@ -178,7 +202,7 @@ class MainLineActivity :
                                 "과열" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))
                                 "OPEN" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_forward_24)))
                                 "CLOSE" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_back_24)))
-                                "대변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_square_24)))
+                                "대변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_airline_seat_recline_normal_24)))
                                 "소변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_water_drop_24)))
                                 "공기질나쁨" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24)))
                                 "이산화탄소과다" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24)))
@@ -284,12 +308,13 @@ class MainLineActivity :
                         return label
                     }
                 }
-                textSize = 13f //라벨 텍스트 크기
+                textSize = 14f //라벨 텍스트 크기
             }
 
             xAxis.run {
                 // textColor = ContextCompat.getColor(context,R.color.design_default_color_primary_dark) //라벨 색상
-                position = XAxis.XAxisPosition.BOTTOM //X축을 아래에다가 둔다.
+                position = XAxis.XAxisPosition.BOTTOM //X축을 아래에
+                labelCount = 9 // x축 라벨 갯수 (시간 표시 갯수)
                 granularity = 0.1f // 1 단위만큼 간격 두기
                 setDrawAxisLine(false) // 축 그림
                 setDrawGridLines(true) // 격자
@@ -346,6 +371,10 @@ class MainLineActivity :
                 DatePickerDialog(this, data, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
             }
         }
+    }
+
+    override fun onItemClick(clickData: Any?, clickFrom: String?) {
+        // Recyclerview Click Listener 구현자리
     }
 
 }

@@ -28,7 +28,7 @@ class UtilManager {
                 e.printStackTrace()
             }
 
-            // 오전 9시가 0이 되어야하는 상황
+            // 오전 9시가 0이 되어야하는 상황, 오전9시 기준이기 때문에 540빼줌
             timeMin -= 540f
             // 오전 7시 처리
             if (timeMin < 0) {
@@ -36,14 +36,15 @@ class UtilManager {
             }
             // Log.d("time", timeMin.toString())
 
-            return timeMin.toFloat()// 오전9시 기준이기 때문에 540빼줌
+            return timeMin.toFloat()
         }
 
+        // 서버에서 받은 Timestamp 변환 위해 Locale.KOREA 필요 (리스폰스 값은 UTC기준으로 들어옴)
         fun timestampToTime(timestamp: Timestamp): String {
             val time = timestamp.time
-            // hh -> HH 변경....;;;;;
+            // hh -> HH 변경....;;;;; HH -> 24 기준시
             val res = SimpleDateFormat("HH:mm:ss", Locale.KOREA).format(Date(time))
-//             Log.d("DBG::TIME", res.toString())
+            // Log.d("DBG::TIME", res.toString())
             return res
         }
 

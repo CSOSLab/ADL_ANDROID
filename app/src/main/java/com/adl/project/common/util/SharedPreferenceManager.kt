@@ -16,7 +16,7 @@ class SharedPreferenceManager {
 
         private fun getInstance(context: Context): SharedPreferences {
             synchronized(this) {
-                sp = context.getSharedPreferences("SharedPreferencesFile", Context.MODE_PRIVATE)
+                sp = context.getSharedPreferences("DBG::SharedPreferencesFile", Context.MODE_PRIVATE)
                 return sp!!
             }
         }
