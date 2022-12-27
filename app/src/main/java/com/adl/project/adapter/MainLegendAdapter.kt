@@ -33,8 +33,10 @@ class MainLegendAdapter : RecyclerView.Adapter<MainLegendViewHolder>() {
 
     fun setListInit(_colorMap : MutableMap<String, Int>) {
         for((k,v) in _colorMap){
-            names!!.add(k)
-            colors!!.add(v)
+            if( k != "이상상황" && k != "일상행동"){
+                names!!.add(k)
+                colors!!.add(v)
+            }
         }
 
         Log.d("DBG::RV_MAINLEGEND",names.toString())

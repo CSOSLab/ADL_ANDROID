@@ -6,5 +6,5 @@ import java.util.*
 
 //{"data":[{"sh_id":"AB001309","location":"거실","type":"TV","no":1},
 data class DeviceModel(
-    val sh_id: String, val location: String, val type:String, val no: Int
+    val sh_id: String, val location: String, val type: String, val no: Int
 )

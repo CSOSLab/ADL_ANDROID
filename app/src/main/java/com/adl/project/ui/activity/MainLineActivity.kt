@@ -21,6 +21,7 @@ import com.adl.project.common.util.UtilManager
 import com.adl.project.databinding.ActivityMainLineBinding
 import com.adl.project.model.adl.AdlListModel
 import com.adl.project.model.adl.DeviceListModel
+import com.adl.project.model.adl.DeviceModel
 import com.adl.project.service.HttpService
 import com.adl.project.ui.base.BaseActivity
 import com.github.mikephil.charting.charts.LineChart
@@ -62,7 +63,7 @@ class MainLineActivity :
     }
 
     private fun setInitialize() {
-        binding.btnAnal.setOnClickListener(this@MainLineActivity)
+//        binding.btnAnal.setOnClickListener(this@MainLineActivity)
         binding.btnSetting.setOnClickListener(this@MainLineActivity)
         binding.btnDate.setOnClickListener(this@MainLineActivity)
 
@@ -150,6 +151,11 @@ class MainLineActivity :
         Log.d("DBG:RETRO", deviceList.toString())
         Log.d("DBG:RETRO", adlList.toString())
 
+        val custom1 = DeviceModel("123", "일상행동", "일상행동", 1)
+        val custom2 = DeviceModel("1234", "이상상황", "이상상황", 1)
+        deviceList?.data?.add(custom1)
+        deviceList?.data?.add(custom2)
+
         deviceList?.apply {
             Log.d("DBG:DATA", data.toString())
 
@@ -173,6 +179,8 @@ class MainLineActivity :
             for(l in locationList){
                 // 이상상황일 경우 무조건 RED 컬러 배치
                 if(l == "이상상황") locationColorMap[l] = Color.RED
+                else if(l == "일상행동") locationColorMap[l] = Color.BLUE
+
                 // 나머지는 모두 랜덤
                 else locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
             }
@@ -197,6 +205,7 @@ class MainLineActivity :
                         if(deviceType == d_.type){
                             // ON/OFF 밸류에 따라 아이콘을 따로 처리해야하기 때문에 분기한다.
                             when (d_.value) {
+                                "TV" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
                                 "ON" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
                                 "OFF" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
                                 "과열" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))
@@ -245,6 +254,8 @@ class MainLineActivity :
                     add(nowHighlightData)
                 }
             }
+
+
 
             Log.d("DBG:LINE", linedataList.toString())
 
@@ -346,12 +357,12 @@ class MainLineActivity :
 
     override fun onClick(view: View?) {
         when (view?.id) {
-            R.id.btn_anal -> {
-                val intent = Intent(applicationContext, AnalyticActivity::class.java)
-                intent.putExtra("name", "냉장고")
-                intent.putExtra("mode", 1)
-                startActivity(intent)
-            }
+//            R.id.btn_anal -> {
+//                val intent = Intent(applicationContext, AnalyticActivity::class.java)
+//                intent.putExtra("name", "냉장고")
+//                intent.putExtra("mode", 1)
+//                startActivity(intent)
+//            }
             R.id.btn_setting -> {
                 val intent = Intent(applicationContext, SettingActivity::class.java)
                 startActivity(intent)

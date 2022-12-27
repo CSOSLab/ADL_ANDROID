@@ -39,6 +39,21 @@
                 android:layout_gravity="end"
                 android:layout_marginHorizontal="5dp"
                 android:orientation="horizontal"/>
+
+            <ImageView
+                android:id="@+id/btn_date"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginHorizontal="5dp"
+                android:src="@drawable/ic_baseline_date_range_24"/>
+
+            <ImageView
+                android:id="@+id/btn_setting"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginHorizontal="5dp"
+                android:src="@drawable/ic_baseline_settings_24"/>
+
         </LinearLayout>
 
         <com.github.mikephil.charting.charts.LineChart
@@ -49,55 +64,55 @@
 
     </LinearLayout>
 
-    <com.nambimobile.widgets.efab.ExpandableFabLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+<!--    <com.nambimobile.widgets.efab.ExpandableFabLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent">-->
 
-        <!-- The next 3 Views will only display in landscape orientation -->
-        <com.nambimobile.widgets.efab.Overlay
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="15dp"
-            app:overlay_orientation="landscape"/>
-        <com.nambimobile.widgets.efab.ExpandableFab
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:efab_icon="@drawable/ic_baseline_dehaze_24"
-            android:layout_margin="15dp"
-            app:efab_color="@color/grey"
-            android:layout_gravity="bottom|end"
-            app:efab_orientation="landscape"/>
-        <com.nambimobile.widgets.efab.FabOption
-            android:id="@+id/btn_anal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_orientation="landscape"
-            android:layout_margin="15dp"
-            android:src="@drawable/ic_baseline_fact_check_24"
-            app:fab_color="#303F9F"
-            app:label_text="결과 분석"/>
+<!--        &lt;!&ndash; The next 3 Views will only display in landscape orientation &ndash;&gt;-->
+<!--        <com.nambimobile.widgets.efab.Overlay-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_margin="15dp"-->
+<!--            app:overlay_orientation="landscape"/>-->
+<!--        <com.nambimobile.widgets.efab.ExpandableFab-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:efab_icon="@drawable/ic_baseline_dehaze_24"-->
+<!--            android:layout_margin="15dp"-->
+<!--            app:efab_color="@color/grey"-->
+<!--            android:layout_gravity="bottom|end"-->
+<!--            app:efab_orientation="landscape"/>-->
+<!--        <com.nambimobile.widgets.efab.FabOption-->
+<!--            android:id="@+id/btn_anal"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:fab_orientation="landscape"-->
+<!--            android:layout_margin="15dp"-->
+<!--            android:src="@drawable/ic_baseline_fact_check_24"-->
+<!--            app:fab_color="#303F9F"-->
+<!--            app:label_text="결과 분석"/>-->
 
-        <com.nambimobile.widgets.efab.FabOption
-            android:id="@+id/btn_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_orientation="landscape"
-            android:layout_margin="15dp"
-            android:src="@drawable/ic_baseline_date_range_24"
-            app:fab_color="#D68533"
-            app:label_text="이력"/>
+<!--        <com.nambimobile.widgets.efab.FabOption-->
+<!--            android:id="@+id/btn_date"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:fab_orientation="landscape"-->
+<!--            android:layout_margin="15dp"-->
+<!--            android:src="@drawable/ic_baseline_date_range_24"-->
+<!--            app:fab_color="#D68533"-->
+<!--            app:label_text="이력"/>-->
 
-        <com.nambimobile.widgets.efab.FabOption
-            android:id="@+id/btn_setting"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_orientation="landscape"
-            android:layout_margin="15dp"
-            android:src="@drawable/ic_baseline_settings_24"
-            app:fab_color="#689F38"
-            app:label_text="설정"/>
+<!--        <com.nambimobile.widgets.efab.FabOption-->
+<!--            android:id="@+id/btn_setting"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:fab_orientation="landscape"-->
+<!--            android:layout_margin="15dp"-->
+<!--            android:src="@drawable/ic_baseline_settings_24"-->
+<!--            app:fab_color="#689F38"-->
+<!--            app:label_text="설정"/>-->
 
 
-    </com.nambimobile.widgets.efab.ExpandableFabLayout>
+<!--    </com.nambimobile.widgets.efab.ExpandableFabLayout>-->
 
 </FrameLayout>
