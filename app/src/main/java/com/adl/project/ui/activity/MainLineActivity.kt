@@ -107,7 +107,7 @@ class MainLineActivity :
         val SLIMHUB = "AB001309"
         val server1 = HttpService.create(URL1 + SLIMHUB + "/")
         val data = server1.getDeviceData()
-        Log.d("DBG:RETRO", data)
+        Log.d("DBG:RETRO_DEVICE", data)
         deviceList = Gson().fromJson(data, DeviceListModel::class.java)
     }
 
@@ -118,7 +118,7 @@ class MainLineActivity :
 
         val endDate = UtilManager.getNextDay(startDate)
         val data = server2.getMainData(startDate, endDate)
-        Log.d("DBG::RETRO", data)
+        Log.d("DBG::RETRO_ADL", data)
         adlList = Gson().fromJson(data, AdlListModel::class.java)
     }
 
@@ -206,6 +206,10 @@ class MainLineActivity :
                             // ON/OFF 밸류에 따라 아이콘을 따로 처리해야하기 때문에 분기한다.
                             when (d_.value) {
                                 "TV" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
+                                "요리" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_soup_kitchen_24)))
+                                "양치질" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_soap_24)))
+                                "대화" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_mode_comment_24)))
+                                "식사" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_flatware_24)))
                                 "ON" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
                                 "OFF" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
                                 "과열" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))

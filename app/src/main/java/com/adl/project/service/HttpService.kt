@@ -31,6 +31,13 @@ interface HttpService {
 
     @GET(".")
     @Headers("accept: application/json","charset:utf-8")
+    suspend fun getHistoryData(
+        @Query("fromTime") fromTime: String, //요구하는 기본인자를 @Query형태로
+        @Query("toTime") toTime: String
+    ): String
+
+    @GET(".")
+    @Headers("accept: application/json","charset:utf-8")
     suspend fun getDeviceData(): String
 
 
