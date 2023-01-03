@@ -1,5 +1,6 @@
 package com.adl.project.ui.activity
 
+import android.app.ActionBar.LayoutParams
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.graphics.Color
@@ -142,7 +143,7 @@ class MoveActivity :
                 try{
                     if(i == 0 && j > 0) tvContent.setText(locationList[j-1])
                     else if(j == 0 && i > 0) tvContent.setText(locationList[i-1])
-                    else if(j == 0 && i == 0) tvContent.setText("")
+                    else if(j == 0 && i == 0) tvContent.setText("↔️")
 
                     // curlocation 값을 받아서 현재 위치에 색깔 강조 박스 표시
                     else if(i == j){

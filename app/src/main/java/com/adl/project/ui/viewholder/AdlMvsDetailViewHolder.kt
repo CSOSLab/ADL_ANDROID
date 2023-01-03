@@ -3,6 +3,7 @@ package com.adl.project.ui.viewholder
 import androidx.recyclerview.widget.RecyclerView
 import com.adl.project.common.listener.AdapterClickListener
 import com.adl.project.databinding.ListItemAdlmvsDetailBinding
+import java.sql.Timestamp
 
 /**
  * ADL_MONITORING_APP by CSOS PROJECT
@@ -11,8 +12,8 @@ import com.adl.project.databinding.ListItemAdlmvsDetailBinding
  */
 
 class AdlMvsDetailViewHolder(private var binding: ListItemAdlmvsDetailBinding) : RecyclerView.ViewHolder(binding.root) {
-    fun bind(fromtime: String, totime : String,  difftime: String, _listener: AdapterClickListener?) {
-        binding.tvTime.text = fromtime + " ~ " + totime
+    fun bind(fromtime: Timestamp, totime : Timestamp,  difftime: String, _listener: AdapterClickListener?) {
+        binding.tvTime.text = fromtime.toString() + " ~ " + totime.toString()
         binding.tvDifftime.text = difftime
     }
 }

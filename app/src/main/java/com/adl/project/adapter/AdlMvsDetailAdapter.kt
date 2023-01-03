@@ -34,6 +34,8 @@ class AdlMvsDetailAdapter : RecyclerView.Adapter<AdlMvsDetailViewHolder>() {
         if (datas?.isNotEmpty() == true)
             datas?.clear()
         datas?.addAll(_datas)
+        Log.d("DBG::ADAPTER", datas!!.toString())
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AdlMvsDetailViewHolder {

@@ -40,7 +40,6 @@ class MoveDetailActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_move_detail)
 
         getIntents()
         getServerData()
@@ -107,10 +106,10 @@ class MoveDetailActivity :
 
         binding.recyclerView.apply {
             setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, true)
+            layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
             adapter = adlmvsAdapter
         }
-        adlmvsAdapter?.notifyDataSetChanged()
+        adlmvsAdapter!!.notifyDataSetChanged()
 
     }
 
