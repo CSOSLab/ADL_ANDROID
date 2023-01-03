@@ -44,6 +44,8 @@ class MoveActivity :
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
     private var locationList : List<String> = listOf()
     private var rows : MutableList<TableRow> = mutableListOf()
+    private var clickListenerList : MutableList<Int> = mutableListOf()
+    private var clickListenerDataList : MutableList<String> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +77,7 @@ class MoveActivity :
             adlmvHistoryList = it.data.mvHistory
             curLocation = it.data.curLocation
             Log.d("DBG::MVHISTORY", adlmvHistoryList.toString())
-
+            Log.d("DBG::CURLOC", curLocation.toString())
         }
     }
 
@@ -135,12 +137,21 @@ class MoveActivity :
             val tr = TableRow(applicationContext)
             for (j in 0 until rowColumn) {
                 val tvContent = TextView(applicationContext)
-
+                var isClickNeed = false
                 // 각 축에 범례 세팅
                 try{
                     if(i == 0 && j > 0) tvContent.setText(locationList[j-1])
                     else if(j == 0 && i > 0) tvContent.setText(locationList[i-1])
                     else if(j == 0 && i == 0) tvContent.setText("")
+
+                    // curlocation 값을 받아서 현재 위치에 색깔 강조 박스 표시
+                    else if(i == j){
+                        if(locationList[i-1] == curLocation) {
+                            tvContent.setBackgroundResource(R.drawable.table_border_curlocation)
+                        }else{
+                            tvContent.setBackgroundResource(R.drawable.table_border)
+                        }
+                    }
 
                     // 각 로케이션별 해당값 찾아서 넣기
                     else {
@@ -151,8 +162,8 @@ class MoveActivity :
                                     for(g in mvHis.goals){
                                         if(locationList[i-1] == g.to){
                                             //Log.d("DBG::SETTABLE", locationList[i-1] + g.to)
-                                            tvContent.setText("${g.move_freq}회 (${g.avg_time})")
-
+                                            tvContent.setText("${g.move_freq}회 (${g.avg_time}초)")
+                                            isClickNeed = true
                                         }
                                     }
                                 }
@@ -167,6 +178,11 @@ class MoveActivity :
                     gravity = Gravity.CENTER
                     setTextColor(Color.BLACK)
                     id = 0x01050000 + index
+                    if(isClickNeed) {
+                        clickListenerList.add(id)
+                        clickListenerDataList.add(locationList[j-1] + "_" + locationList[i-1])
+                        // Log.d("DBG::CLICKDATA", id.toString() + "_" + locationList[j-1] + "_" + locationList[i-1])
+                    }
                     setOnClickListener(this@MoveActivity)
                     tr.addView(this)
                 }
@@ -226,13 +242,20 @@ class MoveActivity :
     override fun onClick(p0: View?) {
         Log.d("DBG::ID",(p0?.id).toString())
 
-        when(p0?.id){
-            0x01050000 + 0x0 -> Toast.makeText(applicationContext,"hi 0", Toast.LENGTH_SHORT).show()
-            0x01050000 + 0x1 -> Toast.makeText(applicationContext,"hi 1", Toast.LENGTH_SHORT).show()
-            0x01050000 + 0x2 -> Toast.makeText(applicationContext,"hi 2", Toast.LENGTH_SHORT).show()
-            0x01050000 + 0x3 -> Toast.makeText(applicationContext,"hi 3", Toast.LENGTH_SHORT).show()
-            0x01050000 + 0x4 -> Toast.makeText(applicationContext,"hi 4", Toast.LENGTH_SHORT).show()
+        // 미리 클릭리스너가 필요한 칸을 등록해놓고, 해당 칸을 클릭하면 디테일보기 창으로 넘어감
+        var index = 0
+        for(c in clickListenerList){
+            if(p0?.id == c){
+                val intent = Intent(applicationContext, MoveDetailActivity::class.java)
+                intent.putExtra("date", selectedStartDate)
+                intent.putExtra("from", clickListenerDataList[index].split("_")[0])
+                intent.putExtra("to", clickListenerDataList[index].split("_")[1])
+                startActivity(intent)
+            }
+            index += 1
+        }
 
+        when(p0?.id){
             R.id.btn_setting -> {
                 val intent = Intent(applicationContext, SettingActivity::class.java)
                 startActivity(intent)
