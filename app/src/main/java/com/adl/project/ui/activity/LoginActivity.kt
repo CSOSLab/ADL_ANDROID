@@ -21,12 +21,12 @@ class LoginActivity : BaseActivity<ActivityLoginBinding>(ActivityLoginBinding::i
 
     fun setInitialize(){
         binding.btnLogin1.setOnClickListener {
-            val intent = Intent(applicationContext, MainLineActivity::class.java)
+            val intent = Intent(applicationContext, SelectActivity::class.java)
             startActivity(intent)
         }
 
         binding.btnLogin2.setOnClickListener {
-            val intent = Intent(applicationContext, MainLineActivity::class.java)
+            val intent = Intent(applicationContext, SelectActivity::class.java)
             startActivity(intent)
         }
     }
