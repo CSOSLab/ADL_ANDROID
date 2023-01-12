@@ -20,9 +20,11 @@ import com.adl.project.common.util.TimeAxisValueFormatManager
 import com.adl.project.common.util.UtilManager
 import com.adl.project.databinding.ActivityMainLineBinding
 import com.adl.project.model.adl.AdlListModel
+import com.adl.project.model.adl.AdlSocketModel
 import com.adl.project.model.adl.DeviceListModel
 import com.adl.project.model.adl.DeviceModel
 import com.adl.project.service.HttpService
+import com.adl.project.service.SocketIoService
 import com.adl.project.ui.base.BaseActivity
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
@@ -32,7 +34,11 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.EntryXComparator
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import io.socket.client.Socket
+import io.socket.emitter.Emitter
 import kotlinx.coroutines.*
+import org.json.JSONObject
 import java.util.*
 
 
@@ -46,6 +52,9 @@ class MainLineActivity :
     BaseActivity<ActivityMainLineBinding>(ActivityMainLineBinding::inflate, TransitionMode.FADE),
     View.OnClickListener, AdapterClickListener {
 
+    private var SLIMHUB_NAME : String = ""
+
+    private lateinit var mSocket: Socket
     private var mainLegendAdapter: MainLegendAdapter? = null
     private var selectedStartDate : String = "2022-12-17"
     private var isFirst = true
@@ -54,11 +63,20 @@ class MainLineActivity :
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
 
+    val onMessage = Emitter.Listener { args ->
+        val obj = JSONObject(args[0].toString())
+        Log.d("DBG:SOCKET.IO::RECEIVED::", obj.toString())
+        runOnUiThread {
+            Toast.makeText(applicationContext, obj.toString(), Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        selectedStartDate = UtilManager.getToday().toString() // 앱 시작시에 기준일을 오늘로 변경
+        SLIMHUB_NAME = "AB001309" // 슬림허브 네임
 
-        // 앱 시작시에 기준일을 오늘로 변경
-        selectedStartDate = UtilManager.getToday().toString()
+        setRealtimeConnection()
         setChartWithDate()
     }
 
@@ -85,6 +103,23 @@ class MainLineActivity :
         }
     }
 
+    private fun setRealtimeConnection(){
+        try{
+            mSocket = SocketIoService.get()
+            mSocket.on("update_adl", onMessage)
+            mSocket.connect()
+            Log.d("DBG:SOCKET.IO", "SOCKET.IO CONNECT" + mSocket.id())
+
+            val helloObject = Gson().toJsonTree(AdlSocketModel(SLIMHUB_NAME)).toString()
+            Log.d("DBG:JSON", helloObject)
+            mSocket.emit("hello", "{shId : \"$SLIMHUB_NAME\"}")
+        }catch (e: Exception){
+            e.printStackTrace()
+            Log.d("DBG:SOCKET.IO", "SOCKET.IO 연결오류")
+            Toast.makeText(applicationContext, "실시간대응 소켓 연결실패!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun setChartWithDate(){
 
         // 데이터 초기화
@@ -104,7 +139,7 @@ class MainLineActivity :
 
     private suspend fun getDevice(){
         val URL1 = "http://155.230.186.66:8000/devices/"
-        val SLIMHUB = "AB001309"
+        val SLIMHUB = SLIMHUB_NAME
         val server1 = HttpService.create(URL1 + SLIMHUB + "/")
         val data = server1.getDeviceData()
         Log.d("DBG:RETRO_DEVICE", data)
@@ -113,7 +148,7 @@ class MainLineActivity :
 
     private suspend fun getAdl(startDate: String){
         val URL2 = "http://155.230.186.66:8000/ADLs/"
-        val SLIMHUB = "AB001309"
+        val SLIMHUB = SLIMHUB_NAME
         val server2 = HttpService.create(URL2 + SLIMHUB + "/")
 
         val endDate = UtilManager.getNextDay(startDate)
@@ -377,7 +412,7 @@ class MainLineActivity :
                 // (month가 0으로 시작하는 issue 있어서 +1 해주기)
                 val data = DatePickerDialog.OnDateSetListener { view, year, month, day ->
                     selectedStartDate = "${year}-${month + 1}-${day}"
-                    Log.d("DBG::SELECTEDDATE", selectedStartDate)
+                    Log.d("DBG:SELECTEDDATE", selectedStartDate)
                     setChartWithDate()
                 }
 
