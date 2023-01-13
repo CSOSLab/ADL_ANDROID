@@ -10,9 +10,8 @@ import com.adl.project.service.SocketIoService
 import com.google.gson.Gson
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
-import org.json.JSONObject
 
-class TestActivity : AppCompatActivity() {
+class SocketIoTestActivity : AppCompatActivity() {
     private lateinit var mSocket: Socket
     val onMessage = Emitter.Listener { args ->
         val obj = args.toString()

@@ -64,10 +64,11 @@ class MainLineActivity :
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
 
     val onMessage = Emitter.Listener { args ->
-        val obj = JSONObject(args[0].toString())
-        Log.d("DBG:SOCKET.IO::RECEIVED::", obj.toString())
+        val obj = args.toString()
+        Log.d("DBG:SOCKET.IO::RECEIVED::", obj)
         runOnUiThread {
-            Toast.makeText(applicationContext, obj.toString(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, "실시간 정보 수신됨!", Toast.LENGTH_SHORT).show()
+            if(UtilManager.getToday().toString() == selectedStartDate) setChartWithDate()
         }
     }
 
@@ -112,7 +113,7 @@ class MainLineActivity :
 
             val helloObject = Gson().toJsonTree(AdlSocketModel(SLIMHUB_NAME)).toString()
             Log.d("DBG:JSON", helloObject)
-            mSocket.emit("hello", "{shId : \"$SLIMHUB_NAME\"}")
+            mSocket.emit("hello", helloObject)
         }catch (e: Exception){
             e.printStackTrace()
             Log.d("DBG:SOCKET.IO", "SOCKET.IO 연결오류")
@@ -130,6 +131,8 @@ class MainLineActivity :
         // 메인쓰레드 UI건드리는 작업이므로 코루틴 Dispatchers.Main 사용
         CoroutineScope(Dispatchers.Main).launch {
             connectToServer()
+            Log.d("DBG:SETCHART", "CHART")
+
         }
     }
 
