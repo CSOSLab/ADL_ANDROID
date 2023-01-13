@@ -67,7 +67,7 @@ class MainLineActivity :
         val obj = args.toString()
         Log.d("DBG:SOCKET.IO::RECEIVED::", obj)
         runOnUiThread {
-            Toast.makeText(applicationContext, "실시간 정보 수신됨!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, "실시간 정보 갱신됨!", Toast.LENGTH_SHORT).show()
             if(UtilManager.getToday().toString() == selectedStartDate) setChartWithDate()
         }
     }
@@ -428,6 +428,11 @@ class MainLineActivity :
 
     override fun onItemClick(clickData: Any?, clickFrom: String?) {
         // Recyclerview Click Listener 구현자리
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        try{ mSocket.disconnect() }catch (_:Exception){}
     }
 
 }

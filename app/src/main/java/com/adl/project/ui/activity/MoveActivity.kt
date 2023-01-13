@@ -20,12 +20,16 @@ import com.adl.project.common.*
 import com.adl.project.common.enum.TransitionMode
 import com.adl.project.common.util.UtilManager
 import com.adl.project.databinding.ActivityMoveBinding
+import com.adl.project.model.adl.AdlSocketModel
 import com.adl.project.model.adl.DeviceListModel
 import com.adl.project.model.adlmvhistory.AdlMvModel
 import com.adl.project.model.adlmvhistory.MvHistoryListModel
 import com.adl.project.service.HttpService
+import com.adl.project.service.SocketIoService
 import com.adl.project.ui.base.BaseActivity
 import com.google.gson.Gson
+import io.socket.client.Socket
+import io.socket.emitter.Emitter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,6 +40,9 @@ import java.util.*
 class MoveActivity :
     BaseActivity<ActivityMoveBinding>(ActivityMoveBinding::inflate, TransitionMode.FADE),
     View.OnClickListener {
+
+    private var SLIMHUB_NAME : String = ""
+    private lateinit var mSocket: Socket
 
     private var mainLegendAdapter: MainLegendAdapter? = null
     private var curLocation : String? = null
@@ -48,11 +55,40 @@ class MoveActivity :
     private var clickListenerList : MutableList<Int> = mutableListOf()
     private var clickListenerDataList : MutableList<String> = mutableListOf()
 
+    val onMessage = Emitter.Listener { args ->
+        val obj = args.toString()
+        Log.d("DBG:SOCKET.IO::RECEIVED::", obj)
+        runOnUiThread {
+            Toast.makeText(applicationContext, "실시간 정보 갱신됨!", Toast.LENGTH_SHORT).show()
+            if(UtilManager.getToday().toString() == selectedStartDate) getServerData()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        selectedStartDate = UtilManager.getToday().toString()
+        selectedStartDate = UtilManager.getToday().toString() // 앱 시작시에 기준일을 오늘로 변경
+        SLIMHUB_NAME = "AB001309" // 슬림허브 네임
+
+        setRealtimeConnection()
         getServerData()
+    }
+
+    private fun setRealtimeConnection(){
+        try{
+            mSocket = SocketIoService.get()
+            mSocket.on("update_adlmv", onMessage)
+            mSocket.connect()
+            Log.d("DBG:SOCKET.IO", "SOCKET.IO CONNECT" + mSocket.id())
+
+            val helloObject = Gson().toJsonTree(AdlSocketModel(SLIMHUB_NAME)).toString()
+            Log.d("DBG:JSON", helloObject)
+            mSocket.emit("hello", helloObject)
+        }catch (e: Exception){
+            e.printStackTrace()
+            Log.d("DBG:SOCKET.IO", "SOCKET.IO 연결오류")
+            Toast.makeText(applicationContext, "실시간대응 소켓 연결실패!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private suspend fun getDevice(){
@@ -276,6 +312,11 @@ class MoveActivity :
                 DatePickerDialog(this, data, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
             }
         }
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        try{ mSocket.disconnect() }catch (_:Exception){}
     }
 
 }
