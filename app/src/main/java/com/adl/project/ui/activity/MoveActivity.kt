@@ -59,8 +59,10 @@ class MoveActivity :
         val obj = args.toString()
         Log.d("DBG:SOCKET.IO::RECEIVED::", obj)
         runOnUiThread {
-            Toast.makeText(applicationContext, "실시간 정보 갱신됨!", Toast.LENGTH_SHORT).show()
-            if(UtilManager.getToday().toString() == selectedStartDate) getServerData()
+            if(UtilManager.getToday().toString() == selectedStartDate){
+                Toast.makeText(applicationContext, "실시간 정보 갱신됨!", Toast.LENGTH_SHORT).show()
+                getServerData()
+            }
         }
     }
 
@@ -76,7 +78,7 @@ class MoveActivity :
 
     private fun setRealtimeConnection(){
         try{
-            mSocket = SocketIoService.get()
+            mSocket = SocketIoService.get("ADLMV_NOTIFIER")
             mSocket.on("update_adlmv", onMessage)
             mSocket.connect()
             Log.d("DBG:SOCKET.IO", "SOCKET.IO CONNECT" + mSocket.id())
@@ -195,6 +197,7 @@ class MoveActivity :
                         //adlmvHistoryList가 비어있지 않으면, 순회하면서 from, to에 해당하는 값에 값 찾아 넣기
                         adlmvHistoryList?.let{
                             for(mvHis in it){
+                                // TODO :: data 없을 때 0으로 초기화
                                 if(locationList[j-1] == mvHis.from){
                                     for(g in mvHis.goals){
                                         if(locationList[i-1] == g.to){
@@ -206,6 +209,7 @@ class MoveActivity :
                                 }
                             }
                         }
+
                         tvContent.setBackgroundResource(R.drawable.table_border)
                     }
                 }catch (_: IndexOutOfBoundsException){ }

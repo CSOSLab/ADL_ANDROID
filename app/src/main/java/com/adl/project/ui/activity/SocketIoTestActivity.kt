@@ -29,7 +29,7 @@ class SocketIoTestActivity : AppCompatActivity() {
     }
     private fun setRealtimeConnection(){
         try{
-            mSocket = SocketIoService.get()
+            mSocket = SocketIoService.get("ADL_NOTIFIER")
             mSocket.on("update_adl", onMessage)
             mSocket.connect()
 

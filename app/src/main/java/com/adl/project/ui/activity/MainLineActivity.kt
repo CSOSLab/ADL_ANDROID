@@ -62,13 +62,16 @@ class MainLineActivity :
     private var deviceList : DeviceListModel? = null
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
+    private val locationList : ArrayList<String> = ArrayList()
 
     val onMessage = Emitter.Listener { args ->
         val obj = args.toString()
         Log.d("DBG:SOCKET.IO::RECEIVED::", obj)
         runOnUiThread {
-            Toast.makeText(applicationContext, "실시간 정보 갱신됨!", Toast.LENGTH_SHORT).show()
-            if(UtilManager.getToday().toString() == selectedStartDate) setChartWithDate()
+            if(UtilManager.getToday().toString() == selectedStartDate) {
+                Toast.makeText(applicationContext, "실시간 정보 갱신됨!", Toast.LENGTH_SHORT).show()
+                setChartWithDate()
+            }
         }
     }
 
@@ -102,11 +105,13 @@ class MainLineActivity :
             layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.HORIZONTAL, true)
             adapter = mainLegendAdapter
         }
+
+
     }
 
     private fun setRealtimeConnection(){
         try{
-            mSocket = SocketIoService.get()
+            mSocket = SocketIoService.get("ADL_NOTIFIER")
             mSocket.on("update_adl", onMessage)
             mSocket.connect()
             Log.d("DBG:SOCKET.IO", "SOCKET.IO CONNECT" + mSocket.id())
@@ -177,6 +182,8 @@ class MainLineActivity :
             job.join()
             // job이 끝나면, 밑에 코드 실행
 
+            // TODO :: 축 색깔 설정 (첫 실행시에만)
+            setAxisColor()
             // TODO :: 축 설정
             setAxisWithData()
             // TODO :: 모두 완료 후에 최종 화면 셋팅
@@ -185,14 +192,42 @@ class MainLineActivity :
 
     }
 
-    private fun setAxisWithData(){
-        Log.d("DBG:RETRO", deviceList.toString())
-        Log.d("DBG:RETRO", adlList.toString())
-
+    private fun setAxisColor(){
         val custom1 = DeviceModel("123", "일상행동", "일상행동", 1)
         val custom2 = DeviceModel("1234", "이상상황", "이상상황", 1)
         deviceList?.data?.add(custom1)
         deviceList?.data?.add(custom2)
+
+        if(isFirst) // 처음에만 색깔 랜덤으로 결정해서 locationColorMap에 담고, 이후 갱신시에는 건드리지 않음.
+            deviceList?.apply {
+                // Location별 Color Map을 만들기 위한 로직
+                // DeviceModel의 location 값들을 리스트에 담는다.
+                for(d in data.indices){
+                    locationList.add(data[d].location)
+                }
+
+                for(d in data.indices){
+                    locationList.add(data[d].location)
+                }
+
+                // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
+                locationList.distinct()
+
+                // 각 Location별로 랜덤 컬러를 지정한다.
+                for(l in locationList){
+                    // 이상상황일 경우 무조건 RED 컬러 배치
+                    if(l == "이상상황") locationColorMap[l] = Color.RED
+                    else if(l == "일상행동") locationColorMap[l] = Color.BLUE
+
+                    // 나머지는 모두 랜덤
+                    else locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
+                }
+            }
+        }
+
+    private fun setAxisWithData(){
+        Log.d("DBG:RETRO", deviceList.toString())
+        Log.d("DBG:RETRO", adlList.toString())
 
         deviceList?.apply {
             Log.d("DBG:DATA", data.toString())
@@ -202,26 +237,6 @@ class MainLineActivity :
             // 현재시간 표시할 데이터셋 선언 (세로긴줄)
             val entryListNow : ArrayList<Entry> = ArrayList()
 
-            // Location별 Color Map을 만들기 위한 로직
-            // DeviceModel의 location 값들을 리스트에 담는다.
-            val locationList : ArrayList<String> = ArrayList()
-
-            for(d in data.indices){
-                locationList.add(data[d].location)
-            }
-
-            // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
-            locationList.distinct()
-
-            // 각 Location별로 랜덤 컬러를 지정한다.
-            for(l in locationList){
-                // 이상상황일 경우 무조건 RED 컬러 배치
-                if(l == "이상상황") locationColorMap[l] = Color.RED
-                else if(l == "일상행동") locationColorMap[l] = Color.BLUE
-
-                // 나머지는 모두 랜덤
-                else locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
-            }
 
             // ADL데이터 차트연동 로직
             for(d in data.indices){
