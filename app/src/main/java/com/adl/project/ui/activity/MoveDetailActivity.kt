@@ -113,11 +113,6 @@ class MoveDetailActivity :
 
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-        finish()
-    }
-
     override fun onClick(p0: View?) {
         //TODO("Not yet implemented")
     }

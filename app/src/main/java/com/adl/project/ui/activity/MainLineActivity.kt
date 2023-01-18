@@ -84,9 +84,6 @@ class MainLineActivity :
 
         setRealtimeConnection()
         setChartWithDate()
-//        if(UtilManager.getToday().toString() == selectedStartDate) {
-//            Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
-//        }
     }
 
     private fun setInitialize() {
@@ -144,6 +141,10 @@ class MainLineActivity :
             Log.d("DBG:SETCHART", "CHART")
 
         }
+
+        // 오늘 날짜일 경우 현재시간 Indicator 1초단위 새로고침
+        if(UtilManager.getToday().toString() == selectedStartDate) Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
+
     }
 
     /* TODO :: 서버 연결 ->
@@ -436,8 +437,13 @@ class MainLineActivity :
                 // 선택한 날짜를 selectedStartDate로 만든 후 차트 데이터 재연동
                 // (month가 0으로 시작하는 issue 있어서 +1 해주기)
                 val data = DatePickerDialog.OnDateSetListener { view, year, month, day ->
-                    if(month + 1 < 10) selectedStartDate = "${year}-0${month + 1}-${day}"
+                    if(month + 1 < 10) {
+                        if(day < 10) selectedStartDate = "${year}-0${month + 1}-0${day}"
+                        else selectedStartDate = "${year}-0${month + 1}-${day}"
+                    }
                     else selectedStartDate = "${year}-${month + 1}-${day}"
+
+
                     Log.d("DBG:SELECTEDDATE", selectedStartDate)
                     setChartWithDate()
                 }
