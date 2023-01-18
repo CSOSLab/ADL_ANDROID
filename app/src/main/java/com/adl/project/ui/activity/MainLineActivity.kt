@@ -62,7 +62,6 @@ class MainLineActivity :
     private var isFirst = true
     private var adlList : AdlListModel? = null
     private var deviceList : DeviceListModel? = null
-    private var lineData: LineDataSet? = null
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
     private val locationList : ArrayList<String> = ArrayList()
@@ -85,9 +84,9 @@ class MainLineActivity :
 
         setRealtimeConnection()
         setChartWithDate()
-        if(UtilManager.getToday().toString() == selectedStartDate) {
-            Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
-        }
+//        if(UtilManager.getToday().toString() == selectedStartDate) {
+//            Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
+//        }
     }
 
     private fun setInitialize() {
@@ -167,6 +166,7 @@ class MainLineActivity :
 
         val endDate = UtilManager.getNextDay(startDate)
         val data = server2.getMainData(startDate, endDate)
+        Log.d("DBG::RETRO_RANGE", startDate + "~" + endDate)
         Log.d("DBG::RETRO_ADL", data)
         adlList = Gson().fromJson(data, AdlListModel::class.java)
     }
@@ -197,6 +197,7 @@ class MainLineActivity :
 
             Log.d("DBG:RETRO", deviceList.toString())
             Log.d("DBG:RETRO", adlList.toString())
+            Log.d("DBG::RETROSIZE", deviceList!!.data.size.toString() + "::" + adlList!!.data.size.toString())
         }
 
     }
@@ -235,6 +236,7 @@ class MainLineActivity :
         }
 
     private fun setAxisWithData(){
+
 
         deviceList?.apply {
             Log.d("DBG:DATA", data.toString())
@@ -286,7 +288,7 @@ class MainLineActivity :
 
                 // 최종 ADL 데이터셋
                 Collections.sort(entryList, EntryXComparator()) // 차트 확대시 NegativeArraySizeException 오류 해결법
-                lineData = LineDataSet(entryList, deviceType)
+                val lineData = LineDataSet(entryList, deviceType)
 
                 // 선택한 이력 날짜가 오늘일 경우 현재시간 실시간 업데이트 (세로긴줄)
                 // 오늘 데이터일 경우 현재시간 표시
@@ -299,22 +301,22 @@ class MainLineActivity :
                 }
 
                 if(UtilManager.getToday() == selectedStartDate){
-                    entryListNow.add(Entry(UtilManager.convertTimeToMin(UtilManager.getNow()!!), lineData!!.yMax))
+                    entryListNow.add(Entry(UtilManager.convertTimeToMin(UtilManager.getNow()!!), lineData.yMax))
                 }
 
                 // location별 colormap을 실제 라인컬러에 적용한다 (null-safe 처리)
                 locationColorMap[data[d].location]?.apply {
-                    lineData!!.color = this
+                    lineData.color = this
                 }
 
-                lineData!!.apply {
+                lineData.apply {
                     lineWidth = 4f
                     setDrawValues(false)
                     setDrawCircles(false)
                 }
 
                 linedataList.apply {
-                    add(lineData!!)
+                    add(lineData)
                     add(nowHighlightData)
                 }
             }
@@ -434,7 +436,8 @@ class MainLineActivity :
                 // 선택한 날짜를 selectedStartDate로 만든 후 차트 데이터 재연동
                 // (month가 0으로 시작하는 issue 있어서 +1 해주기)
                 val data = DatePickerDialog.OnDateSetListener { view, year, month, day ->
-                    selectedStartDate = "${year}-${month + 1}-${day}"
+                    if(month + 1 < 10) selectedStartDate = "${year}-0${month + 1}-${day}"
+                    else selectedStartDate = "${year}-${month + 1}-${day}"
                     Log.d("DBG:SELECTEDDATE", selectedStartDate)
                     setChartWithDate()
                 }

@@ -54,7 +54,7 @@ class UtilManager {
             calendar.time = sdf.parse(startDate)!!
             calendar.add(Calendar.DATE, 1)
 
-            Log.d("DBG::TIME", sdf.format(calendar.time))
+            // Log.d("DBG::TIME", sdf.format(calendar.time))
             return sdf.format(calendar.time)
         }
 
