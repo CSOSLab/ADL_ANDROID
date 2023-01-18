@@ -40,6 +40,8 @@ import io.socket.emitter.Emitter
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.util.*
+import kotlin.concurrent.schedule
+import kotlin.concurrent.scheduleAtFixedRate
 
 
 /**
@@ -60,6 +62,7 @@ class MainLineActivity :
     private var isFirst = true
     private var adlList : AdlListModel? = null
     private var deviceList : DeviceListModel? = null
+    private var lineData: LineDataSet? = null
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
     private val locationList : ArrayList<String> = ArrayList()
@@ -82,6 +85,9 @@ class MainLineActivity :
 
         setRealtimeConnection()
         setChartWithDate()
+        if(UtilManager.getToday().toString() == selectedStartDate) {
+            Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
+        }
     }
 
     private fun setInitialize() {
@@ -188,6 +194,9 @@ class MainLineActivity :
             setAxisWithData()
             // TODO :: 모두 완료 후에 최종 화면 셋팅
             setInitialize()
+
+            Log.d("DBG:RETRO", deviceList.toString())
+            Log.d("DBG:RETRO", adlList.toString())
         }
 
     }
@@ -226,8 +235,6 @@ class MainLineActivity :
         }
 
     private fun setAxisWithData(){
-        Log.d("DBG:RETRO", deviceList.toString())
-        Log.d("DBG:RETRO", adlList.toString())
 
         deviceList?.apply {
             Log.d("DBG:DATA", data.toString())
@@ -279,7 +286,7 @@ class MainLineActivity :
 
                 // 최종 ADL 데이터셋
                 Collections.sort(entryList, EntryXComparator()) // 차트 확대시 NegativeArraySizeException 오류 해결법
-                val lineData = LineDataSet(entryList, deviceType)
+                lineData = LineDataSet(entryList, deviceType)
 
                 // 선택한 이력 날짜가 오늘일 경우 현재시간 실시간 업데이트 (세로긴줄)
                 // 오늘 데이터일 경우 현재시간 표시
@@ -292,31 +299,29 @@ class MainLineActivity :
                 }
 
                 if(UtilManager.getToday() == selectedStartDate){
-                    entryListNow.add(Entry(UtilManager.convertTimeToMin(UtilManager.getNow()!!), lineData.yMax))
+                    entryListNow.add(Entry(UtilManager.convertTimeToMin(UtilManager.getNow()!!), lineData!!.yMax))
                 }
 
                 // location별 colormap을 실제 라인컬러에 적용한다 (null-safe 처리)
                 locationColorMap[data[d].location]?.apply {
-                    lineData.color = this
+                    lineData!!.color = this
                 }
 
-                lineData.apply {
+                lineData!!.apply {
                     lineWidth = 4f
                     setDrawValues(false)
                     setDrawCircles(false)
                 }
 
                 linedataList.apply {
-                    add(lineData)
+                    add(lineData!!)
                     add(nowHighlightData)
                 }
             }
 
-
-
-            Log.d("DBG:LINE", linedataList.toString())
-
+//            Log.d("DBG:LINE", linedataList.toString())
             val dataSet: ArrayList<ILineDataSet> = ArrayList()
+
             for(ld in linedataList){
                 dataSet.add(ld)
             }
