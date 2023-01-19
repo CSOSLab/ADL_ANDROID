@@ -70,7 +70,7 @@ class MainLineActivity :
         val obj = args.toString()
         Log.d("DBG:SOCKET.IO::RECEIVED::", obj)
         runOnUiThread {
-            if(UtilManager.getToday().toString() == selectedStartDate) {
+            if(selectedStartDate.contains(UtilManager.getToday().toString())) {
                 Toast.makeText(applicationContext, "실시간 정보 갱신됨!", Toast.LENGTH_SHORT).show()
                 setChartWithDate()
             }
@@ -79,7 +79,7 @@ class MainLineActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        selectedStartDate = UtilManager.getToday().toString() // 앱 시작시에 기준일을 오늘로 변경
+        selectedStartDate = UtilManager.getToday().toString() + " 00:00:00" // 앱 시작시에 기준일을 오늘로 변경
         SLIMHUB_NAME = "AB001309" // 슬림허브 네임
 
         setRealtimeConnection()
@@ -143,7 +143,7 @@ class MainLineActivity :
         }
 
         // 오늘 날짜일 경우 현재시간 Indicator 1초단위 새로고침
-        if(UtilManager.getToday().toString() == selectedStartDate) Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
+        if(selectedStartDate.contains(UtilManager.getToday().toString())) Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
 
     }
 
@@ -165,7 +165,7 @@ class MainLineActivity :
         val SLIMHUB = SLIMHUB_NAME
         val server2 = HttpService.create(URL2 + SLIMHUB + "/")
 
-        val endDate = UtilManager.getNextDay(startDate)
+        val endDate = UtilManager.getNextDay(startDate) + " 00:00:00"
         val data = server2.getMainData(startDate, endDate)
         Log.d("DBG::RETRO_RANGE", startDate + "~" + endDate)
         Log.d("DBG::RETRO_ADL", data)
@@ -301,7 +301,7 @@ class MainLineActivity :
                     color = Color.GRAY
                 }
 
-                if(UtilManager.getToday() == selectedStartDate){
+                if(selectedStartDate.contains(UtilManager.getToday().toString())){
                     entryListNow.add(Entry(UtilManager.convertTimeToMin(UtilManager.getNow()!!), lineData.yMax))
                 }
 
@@ -438,10 +438,10 @@ class MainLineActivity :
                 // (month가 0으로 시작하는 issue 있어서 +1 해주기)
                 val data = DatePickerDialog.OnDateSetListener { view, year, month, day ->
                     if(month + 1 < 10) {
-                        if(day < 10) selectedStartDate = "${year}-0${month + 1}-0${day}"
-                        else selectedStartDate = "${year}-0${month + 1}-${day}"
+                        if(day < 10) selectedStartDate = "${year}-0${month + 1}-0${day} 00:00:00"
+                        else selectedStartDate = "${year}-0${month + 1}-${day} 00:00:00"
                     }
-                    else selectedStartDate = "${year}-${month + 1}-${day}"
+                    else selectedStartDate = "${year}-${month + 1}-${day} 00:00:00"
 
 
                     Log.d("DBG:SELECTEDDATE", selectedStartDate)

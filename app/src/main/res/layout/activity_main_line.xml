@@ -28,10 +28,12 @@
                 android:textStyle="bold"
                 android:textColor="@color/black"
                 android:textSize="17dp"/>
+
             <View
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_weight="1"/>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_main_legend"
                 android:layout_width="wrap_content"
