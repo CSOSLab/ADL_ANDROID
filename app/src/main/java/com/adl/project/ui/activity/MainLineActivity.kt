@@ -240,7 +240,7 @@ class MainLineActivity :
 
 
         deviceList?.apply {
-            Log.d("DBG:DATA", data.toString())
+//            Log.d("DBG:DATA", data.toString())
 
             // 최종 라인데이타셋 담을 리스트 선언
             val linedataList : ArrayList<LineDataSet> = ArrayList()
@@ -258,8 +258,8 @@ class MainLineActivity :
                 labelIndexMap?.put(labelIndex, data[d].type)
 
                 // 각 type별 y축을 쭉 그리기 위해, x축 0과 1440 위치에 투명한 circle을 그린다.
-                entryList.add(Entry(0f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
-                entryList.add(Entry(1439f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+                entryList.add(Entry(-540f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+                entryList.add(Entry(899f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
 
                 // 각 라벨리스트를 순회하며 Adl 수신 값중에 해당하는 type이 있는지 찾는다.
                 adlList?.apply {
@@ -303,6 +303,7 @@ class MainLineActivity :
 
                 if(selectedStartDate.contains(UtilManager.getToday().toString())){
                     entryListNow.add(Entry(UtilManager.convertTimeToMin(UtilManager.getNow()!!), lineData.yMax))
+//                    Log.d("DBG:NOWTIME", UtilManager.convertTimeToMin(UtilManager.getNow()!!).toString())
                 }
 
                 // location별 colormap을 실제 라인컬러에 적용한다 (null-safe 처리)
@@ -397,8 +398,8 @@ class MainLineActivity :
                 textSize = 15f // 텍스트 크기
                 this.valueFormatter = TimeAxisValueFormatManager()
                 setDrawLabels(true)  // Label 표시 여부
-                axisMinimum = 0f  // -240f : 오전 5시, 0f : 오전 9시
-                axisMaximum = 1440f
+                axisMinimum = -540f  // -240f : 오전 5시, 0f : 오전 9시, -540f : 00시
+                axisMaximum = 900f   // 900f : 00시
             }
 
             legend.run {

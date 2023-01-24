@@ -28,12 +28,14 @@ class UtilManager {
                 e.printStackTrace()
             }
 
-            // 오전 9시가 0이 되어야하는 상황, 오전9시 기준이기 때문에 540빼줌
+            // 오전 9시가 0이 되어야하는 상황,
+            /* TODO :: 이유는 모르겠으나, 서버에서 시간을 받아오면 Locale 상관없이 0시가 오전9시로 받아와지는 상황 계속 발생. 일단 540 빼서 처리 */
+
             timeMin -= 540f
-            // 오전 7시 처리
-            if (timeMin < 0) {
-                timeMin = 1440f + timeMin
-            }
+//            // 오전 7시 처리
+//            if (timeMin < 0) {
+//                timeMin = 1440f + timeMin
+//            }
             // Log.d("time", timeMin.toString())
 
             return timeMin.toFloat()
@@ -66,7 +68,7 @@ class UtilManager {
 
         // 현재 시간 구하기
         fun getNow(): String? {
-            val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.KOREA)
+            val dateFormat = SimpleDateFormat("HH:mm:ss")
             return dateFormat.format(Date(System.currentTimeMillis()))
         }
     }
