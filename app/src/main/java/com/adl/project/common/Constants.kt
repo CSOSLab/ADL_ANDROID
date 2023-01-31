@@ -12,5 +12,9 @@ class Constants {
         // 필요한 상수 정의
         const val SLIMHUB_ID      = 0
 
+        const val ENVMODE_TEMPERATURE = 0
+        const val ENVMODE_HUMIDITY = 1
+        const val ENVMODE_CO2 = 2
+
     }
 }

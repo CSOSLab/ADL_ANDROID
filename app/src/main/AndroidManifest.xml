@@ -17,12 +17,18 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".ui.activity.AdlEnvActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".ui.activity.SocketIoTestActivity"
             android:exported="true">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
-
         </activity>
         <activity
             android:name=".ui.activity.MoveDetailActivity"
@@ -41,7 +47,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ui.activity.MoveActivity"
+            android:name=".ui.activity.AdlMvActivity"
             android:exported="false"
             android:screenOrientation="landscape">
             <meta-data
@@ -78,7 +84,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ui.activity.MainLineActivity"
+            android:name=".ui.activity.AdlMainActivity"
             android:exported="true"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"

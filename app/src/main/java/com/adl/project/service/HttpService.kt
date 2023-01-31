@@ -1,8 +1,6 @@
 package com.adl.project.service
 
-import com.adl.project.model.adl.AdlListModel
 import com.adl.project.model.adl.AdlModel
-import com.adl.project.model.adl.DeviceListModel
 import com.adl.project.model.test.PostModel
 import com.glacier.notihttppost.service.UnsafeOkHttpClient
 import com.google.gson.Gson
@@ -31,6 +29,13 @@ interface HttpService {
 
     @GET(".")
     @Headers("accept: application/json","charset:utf-8")
+    suspend fun getEnvData(
+        @Query("fromTime") fromTime: String, //요구하는 기본인자를 @Query형태로
+        @Query("toTime") toTime: String
+    ): String
+
+    @GET(".")
+    @Headers("accept: application/json","charset:utf-8")
     suspend fun getHistoryData(
         @Query("fromTime") fromTime: String, //요구하는 기본인자를 @Query형태로
         @Query("toTime") toTime: String
@@ -48,8 +53,6 @@ interface HttpService {
     @GET(".")
     @Headers("accept: application/json","charset:utf-8")
     suspend fun getDeviceData(): String
-
-
 
     companion object {
         var okHttpClient: OkHttpClient = UnsafeOkHttpClient.unsafeOkHttpClient

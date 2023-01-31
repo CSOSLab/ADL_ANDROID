@@ -14,7 +14,6 @@ import com.adl.project.adapter.MainLegendAdapter
 import com.adl.project.common.enum.TransitionMode
 import com.adl.project.common.listener.AdapterClickListener
 import com.adl.project.common.util.UtilManager
-import com.adl.project.databinding.ActivityMoveBinding
 import com.adl.project.databinding.ActivityMoveDetailBinding
 import com.adl.project.model.adlmvhistory.AdlMvModel
 import com.adl.project.model.adlmvhistory.MvHistoryListModel
