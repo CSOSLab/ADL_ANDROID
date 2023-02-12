@@ -206,30 +206,30 @@ class AdlMainActivity :
 
         if(isFirst) // 처음에만 색깔 랜덤으로 결정해서 locationColorMap에 담고, 이후 갱신시에는 건드리지 않음.
             deviceList?.apply {
-                // Location별 Color Map을 만들기 위한 로직
-                // DeviceModel의 location 값들을 리스트에 담는다.
-                for(d in data.indices){
-                    locationList.add(data[d].location)
-                }
+            // Location별 Color Map을 만들기 위한 로직
+            // DeviceModel의 location 값들을 리스트에 담는다.
+            for(d in data.indices){
+                locationList.add(data[d].location)
+            }
 
-                for(d in data.indices){
-                    locationList.add(data[d].location)
-                }
+            for(d in data.indices){
+                locationList.add(data[d].location)
+            }
 
-                // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
-                locationList.distinct()
+            // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
+            locationList.distinct()
 
-                // 각 Location별로 랜덤 컬러를 지정한다.
-                for(l in locationList){
-                    // 이상상황일 경우 무조건 RED 컬러 배치
-                    if(l == "이상상황") locationColorMap[l] = Color.RED
-                    else if(l == "일상행동") locationColorMap[l] = Color.BLUE
+            // 각 Location별로 랜덤 컬러를 지정한다.
+            for(l in locationList){
+                // 이상상황일 경우 무조건 RED 컬러 배치
+                if(l == "이상상황") locationColorMap[l] = Color.RED
+                else if(l == "일상행동") locationColorMap[l] = Color.BLUE
 
-                    // 나머지는 모두 랜덤
-                    else locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
-                }
+                // 나머지는 모두 랜덤
+                else locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
             }
         }
+    }
 
     private fun setAxisWithData(){
 
