@@ -61,7 +61,6 @@
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/main_chart"
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/white" />
