@@ -80,6 +80,7 @@ class AdlEnvActivity :
 
     }
 
+
     private suspend fun getDevice(){
         val URL1 = "http://155.230.186.66:8000/devices/"
         val SLIMHUB = SLIMHUB_NAME
@@ -338,8 +339,8 @@ class AdlEnvActivity :
 
     private fun setRealtimeConnection(){
         try{
-            mSocket = SocketIoService.get("SOCKET_ADLENV")
-            mSocket.on("update_adl", onMessage)
+            mSocket = SocketIoService.get("ADLENV_NOTIFIER")
+            mSocket.on("update_adlenv", onMessage)
             mSocket.connect()
             Log.d("DBG:SOCKET.IO", "SOCKET.IO CONNECT" + mSocket.id())
 
