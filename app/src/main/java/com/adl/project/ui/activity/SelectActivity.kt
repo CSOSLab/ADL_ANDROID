@@ -17,7 +17,7 @@ class SelectActivity :
         super.onCreate(savedInstanceState)
 
         binding.btn1.setOnClickListener {
-            startActivity(Intent(applicationContext, AdlMainActivity::class.java))
+            startActivity(Intent(applicationContext, AdlEventActivity::class.java))
         }
 
         binding.btn2.setOnClickListener {

@@ -46,6 +46,7 @@ class UtilManager {
             val time = timestamp.time
             // hh -> HH 변경....;;;;; HH -> 24 기준시
             val res = SimpleDateFormat("HH:mm:ss", Locale.KOREA).format(Date(time))
+
             // Log.d("DBG::TIME", res.toString())
             return res
         }

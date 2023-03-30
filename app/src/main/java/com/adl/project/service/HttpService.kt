@@ -23,30 +23,37 @@ interface HttpService {
     @GET(".")
     @Headers("accept: application/json","charset:utf-8")
     suspend fun getMainData(
-        @Query("from") from: String, //요구하는 기본인자를 @Query형태로
-        @Query("to") to: String
+        @Query("fromTime") fromTime: String, //요구하는 기본인자를 @Query형태로
+        @Query("toTime") toTime: String
+    ): String
+
+    @GET(".")
+    @Headers("accept: application/json","charset:utf-8")
+    suspend fun getEventData(
+        @Query("fromTime") fromTime: String,
+        @Query("toTime") toTime: String
     ): String
 
     @GET(".")
     @Headers("accept: application/json","charset:utf-8")
     suspend fun getEnvData(
-        @Query("fromTime") fromTime: String, //요구하는 기본인자를 @Query형태로
+        @Query("fromTime") fromTime: String,
         @Query("toTime") toTime: String
     ): String
 
     @GET(".")
     @Headers("accept: application/json","charset:utf-8")
     suspend fun getHistoryData(
-        @Query("fromTime") fromTime: String, //요구하는 기본인자를 @Query형태로
+        @Query("fromTime") fromTime: String,
         @Query("toTime") toTime: String
     ): String
 
     @GET(".")
     @Headers("accept: application/json","charset:utf-8")
     suspend fun getMvsData(
-        @Query("fromTime") fromTime: String, //요구하는 기본인자를 @Query형태로
+        @Query("fromTime") fromTime: String,
         @Query("toTime") toTime: String,
-        @Query("fromLocation") fromLocation: String, //요구하는 기본인자를 @Query형태로
+        @Query("fromLocation") fromLocation: String,
         @Query("toLocation") toLocation: String
     ): String
 
