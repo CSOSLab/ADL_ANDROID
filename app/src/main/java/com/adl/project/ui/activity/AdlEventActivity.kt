@@ -77,7 +77,7 @@ class AdlEventActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        selectedStartDate = UtilManager.getToday().toString() + "T00:00:00Z" // 앱 시작시에 기준일을 오늘로 변경
+        selectedStartDate = UtilManager.getToday().toString() + " 00:00:00" // 앱 시작시에 기준일을 오늘로 변경
         SLIMHUB_NAME = "AB001309" // 슬림허브 네임
 
         setRealtimeConnection()
@@ -162,7 +162,7 @@ class AdlEventActivity :
         val SLIMHUB = SLIMHUB_NAME
         val server2 = HttpService.create(URL2 + SLIMHUB + "/")
 
-        val endDate = UtilManager.getNextDay(startDate) + "T00:00:00Z"
+        val endDate = UtilManager.getNextDay(startDate) + " 00:00:00"
         val data = server2.getEventData(startDate, endDate)
         Log.d("DBG::RETRO_RANGE", startDate + "~" + endDate)
         Log.d("DBG::RETRO_ADL", data)
@@ -262,6 +262,15 @@ class AdlEventActivity :
                 // 각 라벨리스트를 순회하며 Adl 수신 값중에 해당하는 type이 있는지 찾는다.
                 adlList?.apply {
                     for(d_ in data){
+
+                        //test
+                        if("start" == d_.type){
+                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
+                        }
+                        if("end" == d_.type){
+                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
+                        }
+
                         // Adl 수신정보 중 타입이 일치하는 값이 있으면 해당값을 entryList에 추가한다
                         if(deviceType == d_.type){
                             // ON/OFF 밸류에 따라 아이콘을 따로 처리해야하기 때문에 분기한다.
@@ -437,10 +446,10 @@ class AdlEventActivity :
                 // (month가 0으로 시작하는 issue 있어서 +1 해주기)
                 val data = DatePickerDialog.OnDateSetListener { view, year, month, day ->
                     if(month + 1 < 10) {
-                        if(day < 10) selectedStartDate = "${year}-0${month + 1}-0${day}T00:00:00Z"
-                        else selectedStartDate = "${year}-0${month + 1}-${day}T00:00:00Z"
+                        if(day < 10) selectedStartDate = "${year}-0${month + 1}-0${day} 00:00:00"
+                        else selectedStartDate = "${year}-0${month + 1}-${day} 00:00:00"
                     }
-                    else selectedStartDate = "${year}-${month + 1}-${day}T00:00:00Z"
+                    else selectedStartDate = "${year}-${month + 1}-${day} 00:00:00"
 
 
                     Log.d("DBG:SELECTEDDATE", selectedStartDate)
