@@ -204,6 +204,8 @@ class AdlEventActivity :
     }
 
     private fun setAxisColor(){
+        val custom2 = DeviceModel("1234", "이상상황", "이상상황", 1)
+        deviceList?.data?.add(custom2)
 
         if(isFirst) // 처음에만 색깔 랜덤으로 결정해서 locationColorMap에 담고, 이후 갱신시에는 건드리지 않음.
             deviceList?.apply {
@@ -219,7 +221,15 @@ class AdlEventActivity :
                 var lindex = 0
                 for(l in locationList){
                     locationIndexMap[l] = lindex * 10f
-                    locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
+
+                    // 이상상황일 경우 무조건 RED 컬러 배치
+                    if(l == "이상상황") {
+                        locationColorMap[l] = Color.RED
+                    }
+                    else{
+                        locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
+                    }
+
                     lindex += 1
                 }
             }
