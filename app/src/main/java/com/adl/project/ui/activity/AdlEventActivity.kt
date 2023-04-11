@@ -56,11 +56,13 @@ class AdlEventActivity :
 
     private lateinit var mSocket: Socket
     private var mainLegendAdapter: MainLegendAdapter? = null
-    private var selectedStartDate : String = "2022-12-17"
+    private var selectedStartDate : String = "2023-04-01 00:00:00"
     private var isFirst = true
     private var adlList : AdlListModel? = null
     private var deviceList : DeviceListModel? = null
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
+    private val locationIndexMap : MutableMap<String, Float> = mutableMapOf<String, Float>()
+
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
     private val locationList : ArrayList<String> = ArrayList()
 
@@ -77,7 +79,7 @@ class AdlEventActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        selectedStartDate = UtilManager.getToday().toString() + " 00:00:00" // 앱 시작시에 기준일을 오늘로 변경
+//        selectedStartDate = UtilManager.getToday().toString() + " 00:00:00" // 앱 시작시에 기준일을 오늘로 변경
         SLIMHUB_NAME = "AB001309" // 슬림허브 네임
 
         setRealtimeConnection()
@@ -202,10 +204,6 @@ class AdlEventActivity :
     }
 
     private fun setAxisColor(){
-        val custom1 = DeviceModel("123", "일상행동", "일상행동", 1)
-        val custom2 = DeviceModel("1234", "이상상황", "이상상황", 1)
-        deviceList?.data?.add(custom1)
-        deviceList?.data?.add(custom2)
 
         if(isFirst) // 처음에만 색깔 랜덤으로 결정해서 locationColorMap에 담고, 이후 갱신시에는 건드리지 않음.
             deviceList?.apply {
@@ -222,14 +220,11 @@ class AdlEventActivity :
                 // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
                 locationList.distinct()
 
-                // 각 Location별로 랜덤 컬러를 지정한다.
+                var lindex = 0
                 for(l in locationList){
-                    // 이상상황일 경우 무조건 RED 컬러 배치
-                    if(l == "이상상황") locationColorMap[l] = Color.RED
-                    else if(l == "일상행동") locationColorMap[l] = Color.BLUE
-
-                    // 나머지는 모두 랜덤
-                    else locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
+                    locationIndexMap[l] = lindex * 10f
+                    locationColorMap[l] = Color.rgb(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255))
+                    lindex += 1
                 }
             }
     }
@@ -246,14 +241,14 @@ class AdlEventActivity :
             val entryListNow : ArrayList<Entry> = ArrayList()
 
 
+
             // ADL데이터 차트연동 로직
             for(d in data.indices){
                 val deviceType = data[d].type
                 val entryList : ArrayList<Entry> = ArrayList()
-                val labelIndex = d * 10f
 
                 // 라벨인덱스를 map 자료형에 미리 저장한다.
-                labelIndexMap?.put(labelIndex, data[d].type)
+                labelIndexMap?.put(locationIndexMap[data[d].location]!!, data[d].location)
 
                 // 각 type별 y축을 쭉 그리기 위해, x축 0과 1440 위치에 투명한 circle을 그린다.
                 entryList.add(Entry(-540f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
@@ -265,32 +260,12 @@ class AdlEventActivity :
 
                         //test
                         if("start" == d_.type){
-                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
+                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
                         }
                         if("end" == d_.type){
-                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
+                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
                         }
 
-                        // Adl 수신정보 중 타입이 일치하는 값이 있으면 해당값을 entryList에 추가한다
-                        if(deviceType == d_.type){
-                            // ON/OFF 밸류에 따라 아이콘을 따로 처리해야하기 때문에 분기한다.
-                            when (d_.value) {
-                                "TV" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
-                                "요리" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_soup_kitchen_24)))
-                                "양치질" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_soap_24)))
-                                "대화" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_mode_comment_24)))
-                                "식사" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_flatware_24)))
-                                "ON" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-                                "OFF" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-                                "과열" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_local_fire_department_24)))
-                                "OPEN" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_forward_24)))
-                                "CLOSE" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_back_24)))
-                                "대변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_airline_seat_recline_normal_24)))
-                                "소변" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_water_drop_24)))
-                                "공기질나쁨" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24)))
-                                "이산화탄소과다" -> entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), d * 10f, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24)))
-                            }
-                        }
                     }
                 }
 
