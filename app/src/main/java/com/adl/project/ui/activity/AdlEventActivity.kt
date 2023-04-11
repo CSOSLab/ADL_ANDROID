@@ -64,7 +64,7 @@ class AdlEventActivity :
     private val locationIndexMap : MutableMap<String, Float> = mutableMapOf<String, Float>()
 
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
-    private val locationList : ArrayList<String> = ArrayList()
+    private var locationList : ArrayList<String> = ArrayList()
 
     val onMessage = Emitter.Listener { args ->
         val obj = args.toString()
@@ -213,12 +213,8 @@ class AdlEventActivity :
                     locationList.add(data[d].location)
                 }
 
-                for(d in data.indices){
-                    locationList.add(data[d].location)
-                }
-
                 // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
-                locationList.distinct()
+                locationList = locationList.distinct() as ArrayList<String>
 
                 var lindex = 0
                 for(l in locationList){
@@ -232,7 +228,7 @@ class AdlEventActivity :
     private fun setAxisWithData(){
 
 
-        deviceList?.apply {
+        locationList.apply {
 //            Log.d("DBG:DATA", data.toString())
 
             // 최종 라인데이타셋 담을 리스트 선언
@@ -240,19 +236,18 @@ class AdlEventActivity :
             // 현재시간 표시할 데이터셋 선언 (세로긴줄)
             val entryListNow : ArrayList<Entry> = ArrayList()
 
-
+            Log.d("DBG:LABELINDEX", this.toString())
 
             // ADL데이터 차트연동 로직
-            for(d in data.indices){
-                val deviceType = data[d].type
+            for(d in this){
                 val entryList : ArrayList<Entry> = ArrayList()
 
                 // 라벨인덱스를 map 자료형에 미리 저장한다.
-                labelIndexMap?.put(locationIndexMap[data[d].location]!!, data[d].location)
+                labelIndexMap?.put(locationIndexMap[d]!!, d)
 
                 // 각 type별 y축을 쭉 그리기 위해, x축 0과 1440 위치에 투명한 circle을 그린다.
-                entryList.add(Entry(-540f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
-                entryList.add(Entry(899f, d * 10f, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+                entryList.add(Entry(-540f, locationIndexMap[d]!!, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+                entryList.add(Entry(899f, locationIndexMap[d]!!, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
 
                 // 각 라벨리스트를 순회하며 Adl 수신 값중에 해당하는 type이 있는지 찾는다.
                 adlList?.apply {
@@ -260,18 +255,21 @@ class AdlEventActivity :
 
                         //test
                         if("start" == d_.type){
-                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
+                            if(d == d_.location){
+                                entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
+                            }
                         }
                         if("end" == d_.type){
-                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_live_tv_24)))
+                            if(d == d_.location){
+                                entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
+                            }
                         }
-
                     }
                 }
 
                 // 최종 ADL 데이터셋
                 Collections.sort(entryList, EntryXComparator()) // 차트 확대시 NegativeArraySizeException 오류 해결법
-                val lineData = LineDataSet(entryList, deviceType)
+                val lineData = LineDataSet(entryList, d)
 
                 // 선택한 이력 날짜가 오늘일 경우 현재시간 실시간 업데이트 (세로긴줄)
                 // 오늘 데이터일 경우 현재시간 표시
@@ -289,9 +287,8 @@ class AdlEventActivity :
                 }
 
                 // location별 colormap을 실제 라인컬러에 적용한다 (null-safe 처리)
-                locationColorMap[data[d].location]?.apply {
-                    lineData.color = this
-                }
+                lineData.color = locationColorMap[d]!!
+
 
                 lineData.apply {
                     lineWidth = 4f
@@ -311,6 +308,7 @@ class AdlEventActivity :
             for(ld in linedataList){
                 dataSet.add(ld)
             }
+            Log.d("DBG::dataset", dataSet.toString())
 
             // 모든 과정이 끝나면 차트 그리기
             setData(binding.mainChart, dataSet)
