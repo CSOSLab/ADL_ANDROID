@@ -263,7 +263,8 @@ class AdlEventActivity :
                 adlList?.apply {
                     for(d_ in data){
 
-                        //test
+                        // START _ END 분기
+                        // 추후에 다른 state도 분기 필요
                         if("start" == d_.type){
                             if(d == d_.location){
                                 entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
