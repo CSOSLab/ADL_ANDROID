@@ -113,7 +113,7 @@ class AdlEventActivity :
     private fun setRealtimeConnection(){
         try{
             mSocket = SocketIoService.get("ADL_NOTIFIER")
-            mSocket.on("update_adl", onMessage)
+            mSocket.on("update_adlevent", onMessage)
             mSocket.connect()
             Log.d("DBG:SOCKET.IO", "SOCKET.IO CONNECT" + mSocket.id())
 
