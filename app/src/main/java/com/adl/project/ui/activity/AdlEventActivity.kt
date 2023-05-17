@@ -212,11 +212,12 @@ class AdlEventActivity :
                 // Location별 Color Map을 만들기 위한 로직
                 // DeviceModel의 location 값들을 리스트에 담는다.
                 for(d in data.indices){
-                    locationList.add(data[d].location)
+                    locationList.add(UtilManager.convertToKorean(data[d].location))
                 }
 
                 // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
                 locationList = locationList.distinct() as ArrayList<String>
+
 
                 var lindex = 0
                 for(l in locationList){
@@ -252,8 +253,8 @@ class AdlEventActivity :
             for(d in this){
                 val entryList : ArrayList<Entry> = ArrayList()
 
-                // 라벨인덱스를 map 자료형에 미리 저장한다.
-                labelIndexMap?.put(locationIndexMap[d]!!, d)
+                // 라벨인덱스를 map 자료형에 미리 저장한다. (영어 -> 한글 변경)
+                labelIndexMap?.put(locationIndexMap[d]!!, UtilManager.convertToKorean(d))
 
                 // 각 type별 y축을 쭉 그리기 위해, x축 0과 1440 위치에 투명한 circle을 그린다.
                 entryList.add(Entry(-540f, locationIndexMap[d]!!, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))

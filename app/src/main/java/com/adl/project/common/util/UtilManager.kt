@@ -72,5 +72,16 @@ class UtilManager {
             val dateFormat = SimpleDateFormat("HH:mm:ss")
             return dateFormat.format(Date(System.currentTimeMillis()))
         }
+
+        // 영어 한글 매칭 테이블
+        fun convertToKorean(word: String): String {
+            return when (word) {
+                "living room" -> "거실"
+                "kitchen" -> "부엌"
+                "restroom" -> "화장실"
+                "room" -> "안방"
+                else -> word
+            }
+        }
     }
 }
