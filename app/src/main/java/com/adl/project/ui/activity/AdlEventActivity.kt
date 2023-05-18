@@ -99,7 +99,12 @@ class AdlEventActivity :
 
         mainLegendAdapter?.let {
             it.setItemClickListener(this@AdlEventActivity)
-            it.setListInit(locationColorMap)
+
+            // 최종단계에서 한글로 변경
+            val convertedMap = mutableMapOf<String, Int>()
+            for ((key, value) in locationColorMap) { convertedMap[UtilManager.convertToKorean(key)] = value }
+
+            it.setListInit(convertedMap)
         }
 
         binding.rvMainLegend.apply {
@@ -212,7 +217,7 @@ class AdlEventActivity :
                 // Location별 Color Map을 만들기 위한 로직
                 // DeviceModel의 location 값들을 리스트에 담는다.
                 for(d in data.indices){
-                    locationList.add(UtilManager.convertToKorean(data[d].location))
+                    locationList.add(data[d].location)
                 }
 
                 // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
