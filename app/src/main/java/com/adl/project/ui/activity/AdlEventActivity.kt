@@ -24,6 +24,8 @@ import com.adl.project.model.adl.AdlListModel
 import com.adl.project.model.adl.AdlSocketModel
 import com.adl.project.model.adl.DeviceListModel
 import com.adl.project.model.adl.DeviceModel
+import com.adl.project.model.adlevent.AdlEventListModel
+import com.adl.project.model.adlevent.AdlEventModel
 import com.adl.project.service.HttpService
 import com.adl.project.service.SocketIoService
 import com.adl.project.ui.base.BaseActivity
@@ -58,7 +60,7 @@ class AdlEventActivity :
     private var mainLegendAdapter: MainLegendAdapter? = null
     private var selectedStartDate : String = "2023-04-01 00:00:00"
     private var isFirst = true
-    private var adlList : AdlListModel? = null
+    private var adlList : AdlEventListModel? = null
     private var deviceList : DeviceListModel? = null
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
     private val locationIndexMap : MutableMap<String, Float> = mutableMapOf<String, Float>()
@@ -117,8 +119,8 @@ class AdlEventActivity :
 
     private fun setRealtimeConnection(){
         try{
-            mSocket = SocketIoService.get("ADL_NOTIFIER")
-            mSocket.on("update_adlevent", onMessage)
+            mSocket = SocketIoService.get("ADLEVENT_NOTIFIER")
+            mSocket.on("update_data", onMessage)
             mSocket.connect()
             Log.d("DBG:SOCKET.IO", "SOCKET.IO CONNECT" + mSocket.id())
 
@@ -173,7 +175,7 @@ class AdlEventActivity :
         val data = server2.getEventData(startDate, endDate)
         Log.d("DBG::RETRO_RANGE", startDate + "~" + endDate)
         Log.d("DBG::RETRO_ADL", data)
-        adlList = Gson().fromJson(data, AdlListModel::class.java)
+        adlList = Gson().fromJson(data, AdlEventListModel::class.java)
     }
 
     suspend fun connectToServer() {
@@ -271,16 +273,10 @@ class AdlEventActivity :
 
                         // START _ END 분기
                         // 추후에 다른 state도 분기 필요
-                        if("start" == d_.type){
-                            if(d == d_.location){
-                                entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-                            }
+                        if(d == d_.location){
+                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.start_time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
                         }
-                        if("end" == d_.type){
-                            if(d == d_.location){
-                                entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24)))
-                            }
-                        }
+
                     }
                 }
 
