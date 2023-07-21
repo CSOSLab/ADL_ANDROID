@@ -24,6 +24,8 @@ import com.adl.project.model.adl.AdlListModel
 import com.adl.project.model.adl.AdlSocketModel
 import com.adl.project.model.adl.DeviceListModel
 import com.adl.project.model.adl.DeviceModel
+import com.adl.project.model.adl.LocationListModel
+import com.adl.project.model.adl.LocationModel
 import com.adl.project.model.adlevent.AdlEventListModel
 import com.adl.project.model.adlevent.AdlEventModel
 import com.adl.project.service.HttpService
@@ -40,6 +42,7 @@ import com.google.gson.Gson
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
 import kotlinx.coroutines.*
+import java.sql.Timestamp
 import java.util.*
 import kotlin.concurrent.scheduleAtFixedRate
 
@@ -61,12 +64,13 @@ class AdlEventActivity :
     private var selectedStartDate : String = "2023-04-01 00:00:00"
     private var isFirst = true
     private var adlList : AdlEventListModel? = null
-    private var deviceList : DeviceListModel? = null
+//    private var deviceList : DeviceListModel? = null
     private val locationColorMap : MutableMap<String, Int> = mutableMapOf<String, Int>()
     private val locationIndexMap : MutableMap<String, Float> = mutableMapOf<String, Float>()
-
     private var labelIndexMap : MutableMap<Float, String>? = mutableMapOf<Float, String>()
-    private var locationList : ArrayList<String> = ArrayList()
+    private var locationList : LocationListModel? = null
+
+    private var locationEntryListMap : MutableMap<String, ArrayList<Entry>>? = mutableMapOf<String, ArrayList<Entry>>()
 
     val onMessage = Emitter.Listener { args ->
         val obj = args.toString()
@@ -85,7 +89,45 @@ class AdlEventActivity :
         SLIMHUB_NAME = "AB001309" // 슬림허브 네임
 
         setRealtimeConnection()
-        setChartWithDate()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            loadLocations()
+            setChartWithDate()
+        }
+    }
+
+    private suspend fun loadLocations()
+    {
+        try {
+            getLocations()
+//            initLocationData() //**
+        } catch (e:Exception){
+            e.printStackTrace()
+            val handler = Handler(Looper.getMainLooper())
+            handler.postDelayed(java.lang.Runnable { Toast.makeText(applicationContext,"서버와 연결이 불안정해 앱을 종료합니다.", Toast.LENGTH_LONG).show() }, 0)
+            finish()
+        }
+    }
+
+    private fun initLocationData()
+    {
+        locationList.apply {
+
+            for( locationModel in this!!.data )
+            {
+                val location = locationModel.location
+                var entryList : ArrayList<Entry> = ArrayList()
+
+                // 라벨인덱스를 map 자료형에 미리 저장한다. (영어 -> 한글 변경)
+                labelIndexMap?.put(locationIndexMap[ location ]!!, UtilManager.convertToKorean( location ))
+
+                // 각 type별 y축을 쭉 그리기 위해, x축 0과 1440 위치에 투명한 circle을 그린다.
+                entryList.add(Entry(-540f, locationIndexMap[ location ]!!, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+                entryList.add(Entry(899f, locationIndexMap[ location ]!!, AppCompatResources.getDrawable(applicationContext, android.R.color.transparent)))
+
+                locationEntryListMap?.put( locationModel.location, entryList )
+            }
+        }
     }
 
     private fun setInitialize() {
@@ -138,36 +180,29 @@ class AdlEventActivity :
 
         // 데이터 초기화
         adlList = null
-        deviceList = null
         labelIndexMap?.clear()
 
         // 메인쓰레드 UI건드리는 작업이므로 코루틴 Dispatchers.Main 사용
         CoroutineScope(Dispatchers.Main).launch {
             connectToServer()
+            setRealtimeIndicator()
             Log.d("DBG:SETCHART", "CHART")
-
         }
-
-        // 오늘 날짜일 경우 현재시간 Indicator 1초단위 새로고침
-        if(selectedStartDate.contains(UtilManager.getToday().toString())) Timer().scheduleAtFixedRate(1000, 1000) { setAxisWithData() }
-
     }
 
-    /* TODO :: 서버 연결 ->
-     *  1. 디바이스 정보 받아와서 축 요소 세팅
-     *  2. ADL 정보 받아와서 차트 그리기 */
-
-    private suspend fun getDevice(){
-        val URL1 = "http://155.230.186.66:8000/devices/"
-        val SLIMHUB = SLIMHUB_NAME
-        val server1 = HttpService.create(URL1 + SLIMHUB + "/")
-        val data = server1.getDeviceData()
-        Log.d("DBG:RETRO_DEVICE", data)
-        deviceList = Gson().fromJson(data, DeviceListModel::class.java)
+    private fun setRealtimeIndicator()
+    {
+        val DELAY_SECOND : Long = 3
+        val DELAY_TIME : Long = DELAY_SECOND * 1000
+        // 오늘 날짜일 경우 현재시간 Indicator 1초단위 새로고침
+        if(selectedStartDate.contains(UtilManager.getToday().toString()))
+            Timer().scheduleAtFixedRate(DELAY_TIME, DELAY_TIME) {
+                setAxisWithData()
+            }
     }
 
     private suspend fun getAdl(startDate: String){
-        val URL2 = "http://155.230.186.66:8000/ADL_EVENTs/"
+        val URL2 = "http://155.230.186.52:8000/ADL_EVENTs/"
         val SLIMHUB = SLIMHUB_NAME
         val server2 = HttpService.create(URL2 + SLIMHUB + "/")
 
@@ -178,11 +213,18 @@ class AdlEventActivity :
         adlList = Gson().fromJson(data, AdlEventListModel::class.java)
     }
 
+    private suspend fun getLocations(){
+        val url = "http://155.230.186.52:8000/locations/"
+        val service = HttpService.create(url + SLIMHUB_NAME + "/")
+        var locationsStr = service.getLocations();
+
+        locationList = Gson().fromJson(locationsStr, LocationListModel::class.java )
+    }
+
     suspend fun connectToServer() {
         // TODO :: 코루틴 도입 -> getDevice, getAdl 을 UI쓰레드에서 분리시키고, 서버연동 과정이 끝나면 차트 그리기. !서버와 연결이 불가능하면 안내문구 띄운 후 앱 종료.
         val job = CoroutineScope(Dispatchers.IO).launch {
             try {
-                getDevice()
                 getAdl(selectedStartDate)
             } catch (e:Exception){
                 e.printStackTrace()
@@ -203,34 +245,24 @@ class AdlEventActivity :
             // TODO :: 모두 완료 후에 최종 화면 셋팅
             setInitialize()
 
-            Log.d("DBG:RETRO", deviceList.toString())
             Log.d("DBG:RETRO", adlList.toString())
-//            Log.d("DBG::RETROSIZE", deviceList!!.data.size.toString() + "::" + adlList!!.data.size.toString())
         }
 
     }
 
-    private fun setAxisColor(){
-        val custom2 = DeviceModel("1234", "이상상황", "이상상황", 1)
-        deviceList?.data?.add(custom2)
+    private fun setAxisColor(){  //**
+
+        var loc = LocationModel(0, SLIMHUB_NAME, "이상상황")
+        locationList?.data?.add(loc)
 
         if(isFirst) // 처음에만 색깔 랜덤으로 결정해서 locationColorMap에 담고, 이후 갱신시에는 건드리지 않음.
-            deviceList?.apply {
-                // Location별 Color Map을 만들기 위한 로직
-                // DeviceModel의 location 값들을 리스트에 담는다.
-                for(d in data.indices){
-                    locationList.add(data[d].location)
-                }
-
-                // locationList 중복 제거 -> Location별 Color Map 만들기 위해서
-                locationList = locationList.distinct() as ArrayList<String>
-
+            locationList?.apply {
 
                 var lindex = 0
-                for(l in locationList){
+                for ( locationModel in data) {
+                    val l = locationModel.location
                     locationIndexMap[l] = lindex * 10f
 
-                    // 이상상황일 경우 무조건 RED 컬러 배치
                     if(l == "이상상황") {
                         locationColorMap[l] = Color.RED
                     }
@@ -243,11 +275,29 @@ class AdlEventActivity :
             }
     }
 
+    private fun createADLEventEntry( start_time : Timestamp, location : String,  adlEvent : String ) : Entry? {
+
+        var adlEventEntry : Entry? = null
+        when ( adlEvent )
+        {
+            "ADL_EVENT_1" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24))
+            "ADL_EVENT_2" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_back_24))
+            "ADL_EVENT_3" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_down_24))
+            "ADL_EVENT_4" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_co2_24))
+            "ADL_EVENT_5" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_forward_24))
+            "ADL_EVENT_6" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_airline_seat_recline_normal_24))
+            "ADL_EVENT_7" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_coronavirus_24))
+            "ADL_EVENT_8" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_date_range_24))
+            "ADL_EVENT_9" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_dehaze_24))
+            "ADL_EVENT_10" -> adlEventEntry = Entry( UtilManager.convertTimeToMin(UtilManager.timestampToTime(start_time)), locationIndexMap[location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_flatware_24))
+        }
+
+        return adlEventEntry
+    }
+
     private fun setAxisWithData(){
 
-
         locationList.apply {
-//            Log.d("DBG:DATA", data.toString())
 
             // 최종 라인데이타셋 담을 리스트 선언
             val linedataList : ArrayList<LineDataSet> = ArrayList()
@@ -257,7 +307,8 @@ class AdlEventActivity :
             Log.d("DBG:LABELINDEX", this.toString())
 
             // ADL데이터 차트연동 로직
-            for(d in this){
+            for( location in this!!.data){
+                val d = location.location
                 val entryList : ArrayList<Entry> = ArrayList()
 
                 // 라벨인덱스를 map 자료형에 미리 저장한다. (영어 -> 한글 변경)
@@ -270,24 +321,32 @@ class AdlEventActivity :
                 // 각 라벨리스트를 순회하며 Adl 수신 값중에 해당하는 type이 있는지 찾는다.
                 adlList?.apply {
                     for(d_ in data){
-
                         // START _ END 분기
                         // 추후에 다른 state도 분기 필요
                         if(d == d_.location){
-                            entryList.add(Entry(UtilManager.convertTimeToMin(UtilManager.timestampToTime(d_.start_time)), locationIndexMap[d_.location]!!, AppCompatResources.getDrawable(applicationContext, R.drawable.ic_baseline_arrow_drop_up_24)))
-                        }
 
+                            val adlEvent = createADLEventEntry(d_.start_time, d_.location, d_.adl_event)
+                            if( adlEvent != null)
+                            {
+                                entryList?.add(adlEvent)
+                            }
+                        }
                     }
                 }
 
                 // 최종 ADL 데이터셋
                 Collections.sort(entryList, EntryXComparator()) // 차트 확대시 NegativeArraySizeException 오류 해결법
-                val lineData = LineDataSet(entryList, d)
+                val lineData = LineDataSet(entryList, d).apply {
+                    // location별 colormap을 실제 라인컬러에 적용한다 (null-safe 처리)
+                    color = locationColorMap[d]!!
+                    lineWidth = 4f
+                    setDrawValues(false)
+                    setDrawCircles(false)
+                }
 
                 // 선택한 이력 날짜가 오늘일 경우 현재시간 실시간 업데이트 (세로긴줄)
                 // 오늘 데이터일 경우 현재시간 표시
-                val nowHighlightData = LineDataSet(entryListNow, "현재시간")
-                nowHighlightData.apply {
+                val nowHighlightData = LineDataSet(entryListNow, "현재시간").apply {
                     lineWidth = 1.5f
                     setDrawValues(false)
                     setDrawCircles(false)
@@ -299,28 +358,13 @@ class AdlEventActivity :
 //                    Log.d("DBG:NOWTIME", UtilManager.convertTimeToMin(UtilManager.getNow()!!).toString())
                 }
 
-                // location별 colormap을 실제 라인컬러에 적용한다 (null-safe 처리)
-                lineData.color = locationColorMap[d]!!
-
-
-                lineData.apply {
-                    lineWidth = 4f
-                    setDrawValues(false)
-                    setDrawCircles(false)
-                }
-
-                linedataList.apply {
-                    add(lineData)
-                    add(nowHighlightData)
-                }
+                linedataList.add(lineData)
+                linedataList.add(nowHighlightData)
             }
 
 //            Log.d("DBG:LINE", linedataList.toString())
-            val dataSet: ArrayList<ILineDataSet> = ArrayList()
+            val dataSet: ArrayList<ILineDataSet> = ArrayList( linedataList )
 
-            for(ld in linedataList){
-                dataSet.add(ld)
-            }
             Log.d("DBG::dataset", dataSet.toString())
 
             // 모든 과정이 끝나면 차트 그리기

@@ -61,6 +61,10 @@ interface HttpService {
     @Headers("accept: application/json","charset:utf-8")
     suspend fun getDeviceData(): String
 
+    @GET(".")
+    @Headers("accept: application/json","charset:utf-8")
+    suspend fun getLocations(): String
+
     companion object {
         var okHttpClient: OkHttpClient = UnsafeOkHttpClient.unsafeOkHttpClient
 
