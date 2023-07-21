@@ -92,7 +92,7 @@ class AdlMvActivity :
     }
 
     private suspend fun getDevice(){
-        val URL1 = "http://155.230.186.66:8000/devices/"
+        val URL1 = "http://155.230.186.52:8000/devices/"
         val SLIMHUB = "AB001309"
         val server1 = HttpService.create(URL1 + SLIMHUB + "/")
         val data = server1.getDeviceData()

@@ -147,7 +147,7 @@ class AdlMainActivity :
      *  2. ADL 정보 받아와서 차트 그리기 */
 
     private suspend fun getDevice(){
-        val URL1 = "http://155.230.186.66:8000/devices/"
+        val URL1 = "http://155.230.186.52:8000/devices/"
         val SLIMHUB = SLIMHUB_NAME
         val server1 = HttpService.create(URL1 + SLIMHUB + "/")
         val data = server1.getDeviceData()
@@ -156,7 +156,7 @@ class AdlMainActivity :
     }
 
     private suspend fun getAdl(startDate: String){
-        val URL2 = "http://155.230.186.66:8000/ADLs/"
+        val URL2 = "http://155.230.186.52:8000/ADLs/"
         val SLIMHUB = SLIMHUB_NAME
         val server2 = HttpService.create(URL2 + SLIMHUB + "/")
 
